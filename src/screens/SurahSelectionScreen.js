@@ -1,0 +1,379 @@
+// src/screens/SurahSelectionScreen.js
+// Écran de sélection de sourate avec design amélioré
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import colors from '../styles/colors';
+import quranData from '../data/quranData';
+
+const SurahSelectionScreen = ({ navigation }) => {
+  const [selectedSurah, setSelectedSurah] = useState('');
+
+  const handleStartTest = () => {
+    if (!selectedSurah) {
+      Alert.alert('تنبيه', 'الرجاء اختيار سورة');
+      return;
+    }
+
+    navigation.navigate('Duaa', {
+      testType: 'surah',
+      surahNumber: parseInt(selectedSurah),
+    });
+  };
+
+  const selectedSurahData = selectedSurah 
+    ? quranData.surahs.find(s => s.number === parseInt(selectedSurah))
+    : null;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>→</Text>
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>اختبار في سورة معينة</Text>
+          <Text style={styles.headerSubtitle}>اختر السورة التي تريد اختبار حفظها</Text>
+        </View>
+      </View>
+
+      {/* Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
+        
+        <View style={styles.content}>
+          {/* Instruction */}
+          <View style={styles.instructionBox}>
+            <Text style={styles.instructionIcon}>📚</Text>
+            <Text style={styles.instructionText}>
+              اختر السورة من القائمة أدناه
+            </Text>
+          </View>
+
+          {/* Picker Card */}
+          <View style={styles.pickerCard}>
+            <Text style={styles.label}>اختر السورة:</Text>
+            
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={selectedSurah}
+                onValueChange={(itemValue) => setSelectedSurah(itemValue)}
+                style={styles.picker}
+                dropdownIconColor={colors.primary}
+                mode="dropdown">
+                <Picker.Item 
+                  label="-- اختر السورة --" 
+                  value="" 
+                  style={styles.pickerItem}
+                />
+                {quranData.surahs.map((surah) => (
+                  <Picker.Item
+                    key={surah.number}
+                    label={`${surah.number}. ${surah.name} - ${surah.verses} آية`}
+                    value={surah.number.toString()}
+                    style={styles.pickerItem}
+                  />
+                ))}
+              </Picker>
+              <View style={styles.pickerUnderline} />
+            </View>
+          </View>
+
+          {/* Info sur la sourate sélectionnée */}
+          {selectedSurahData && (
+            <View style={styles.surahInfoCard}>
+              <View style={styles.surahInfoHeader}>
+                <View style={styles.surahNumberBadge}>
+                  <Text style={styles.surahNumberText}>{selectedSurahData.number}</Text>
+                </View>
+                <View style={styles.surahNameContainer}>
+                  <Text style={styles.surahName}>{selectedSurahData.name}</Text>
+                  <Text style={styles.surahType}>
+                    {selectedSurahData.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.surahStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>عدد الآيات</Text>
+                  <Text style={styles.statValue}>{selectedSurahData.verses}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>رقم الصفحة</Text>
+                  <Text style={styles.statValue}>{selectedSurahData.page}</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Bouton démarrer */}
+          <TouchableOpacity
+            style={[
+              styles.startButton,
+              !selectedSurah && styles.startButtonDisabled
+            ]}
+            onPress={handleStartTest}
+            activeOpacity={0.85}
+            disabled={!selectedSurah}>
+            <Text style={styles.startButtonText}>
+              {selectedSurah ? 'بدء الاختبار' : 'اختر السورة أولاً'}
+            </Text>
+            {selectedSurah && (
+              <View style={styles.startButtonIcon}>
+                <Text style={styles.startButtonIconText}>←</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgLight,
+  },
+  header: {
+    backgroundColor: colors.primary,
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: colors.textLight,
+    fontWeight: 'bold',
+  },
+  headerContent: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textLight,
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.85)',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+  },
+  instructionBox: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    backgroundColor: colors.secondaryLight,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 24,
+    gap: 12,
+  },
+  instructionIcon: {
+    fontSize: 24,
+  },
+  instructionText: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.textPrimary,
+    textAlign: 'right',
+    fontWeight: '500',
+  },
+  pickerCard: {
+    backgroundColor: colors.bgWhite,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  label: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: 16,
+    textAlign: 'right',
+  },
+  pickerWrapper: {
+    position: 'relative',
+  },
+  picker: {
+    backgroundColor: colors.bgLight,
+    borderRadius: 12,
+    color: colors.textPrimary,
+    writingDirection: 'rtl',
+  },
+  pickerItem: {
+    fontSize: 16,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  pickerUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: colors.secondary,
+    borderRadius: 1,
+  },
+  surahInfoCard: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: colors.secondary,
+  },
+  surahInfoHeader: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 16,
+  },
+  surahNumberBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  surahNumberText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textLight,
+  },
+  surahNameContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  surahName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  surahType: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  surahStats: {
+    flexDirection: 'row-reverse',
+    backgroundColor: colors.bgWhite,
+    borderRadius: 14,
+    padding: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+    marginHorizontal: 16,
+  },
+  startButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 18,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  startButtonDisabled: {
+    backgroundColor: colors.textSecondary,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  startButtonText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textLight,
+  },
+  startButtonIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  startButtonIconText: {
+    fontSize: 18,
+    color: colors.textLight,
+    fontWeight: 'bold',
+  },
+});
+
+export default SurahSelectionScreen;
