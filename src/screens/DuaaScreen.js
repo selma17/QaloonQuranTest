@@ -57,18 +57,16 @@ const DuaaScreen = ({ navigation, route }) => {
 
         {/* Duaa Card - COMPACT */}
         <View style={styles.duaaCard}>
-          <Text style={styles.duaaText}>اللَّهُمَّ افْتَحْ عَلَيَّ حِكْمَتَكَ</Text>
+          <Text style={styles.duaaText}>رَبِّ اشْرَحْ لِي صَدْرِي</Text>
           <View style={styles.duaaSeparator} />
-          <Text style={styles.duaaText}>وَانْشُرْ عَلَيَّ رَحْمَتَكَ</Text>
+          <Text style={styles.duaaText}>وَ يَسِّرْ لِي أَمْرِي</Text>
           <View style={styles.duaaSeparator} />
-          <Text style={styles.duaaText}>وَذَكِّرْنِي مَا نَسِيتُ</Text>
-          <View style={styles.duaaSeparator} />
-          <Text style={styles.duaaText}>يَا ذَا الْجَلَالِ وَالْإِكْرَامِ</Text>
+          <Text style={styles.duaaText}>وَ اٗحْلُلْ عُقْدَةً مِنْ لِسَانِي يَفْقَهُ قَوْلِي</Text>
         </View>
 
         {/* Test Info - COMPACT */}
         <View style={styles.testInfoCard}>
-          <Text style={styles.testInfoIcon}>📝</Text>
+          <Text style={styles.testInfoIcon}>🖇️</Text>
           <Text style={styles.testInfoTitle}>
             {testType === 'surah' 
               ? `السورة رقم ${surahNumber}`
@@ -84,11 +82,6 @@ const DuaaScreen = ({ navigation, route }) => {
           activeOpacity={0.85}>
           <Text style={styles.readyButtonText}>جاهز للبدء</Text>
         </TouchableOpacity>
-
-        {/* Motivation - COMPACT */}
-        <Text style={styles.motivationText}>
-          بارك الله فيك، نسأل الله لك التوفيق
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -124,6 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
+    marginTop: 20
   },
   backButtonText: {
     fontSize: 22,
@@ -138,6 +132,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.textLight,
+    marginTop: 25,
+    marginRight: 15
   },
   
   scrollView: {

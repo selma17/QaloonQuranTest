@@ -65,7 +65,6 @@ const PageSelectionScreen = ({ navigation }) => {
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>اختبار في صفحات معينة</Text>
-          <Text style={styles.headerSubtitle}>حدد نطاق الصفحات من المصحف</Text>
         </View>
       </View>
 
@@ -78,7 +77,6 @@ const PageSelectionScreen = ({ navigation }) => {
         <View style={styles.content}>
           {/* Instruction */}
           <View style={styles.instructionBox}>
-            <Text style={styles.instructionIcon}>📄</Text>
             <Text style={styles.instructionText}>
               أدخل نطاق الصفحات التي تريد اختبار حفظها
             </Text>
@@ -233,6 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
+    marginTop: 30
   },
   backButtonText: {
     fontSize: 24,
@@ -248,6 +247,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textLight,
     marginBottom: 4,
+    marginTop: 35,
+    marginRight: 15
   },
   headerSubtitle: {
     fontSize: 14,

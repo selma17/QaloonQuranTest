@@ -48,7 +48,6 @@ const SurahSelectionScreen = ({ navigation }) => {
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>اختبار في سورة معينة</Text>
-          <Text style={styles.headerSubtitle}>اختر السورة التي تريد اختبار حفظها</Text>
         </View>
       </View>
 
@@ -60,9 +59,8 @@ const SurahSelectionScreen = ({ navigation }) => {
         <View style={styles.content}>
           {/* Instruction */}
           <View style={styles.instructionBox}>
-            <Text style={styles.instructionIcon}>📚</Text>
             <Text style={styles.instructionText}>
-              اختر السورة من القائمة أدناه
+              اختر السورة التي تريد اختبار حفظها
             </Text>
           </View>
 
@@ -169,6 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
+    marginTop: 30,
     width: 46,
     height: 46,
     borderRadius: 23,
@@ -191,6 +190,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textLight,
     marginBottom: 4,
+    marginTop: 35,
+    marginRight: 15
   },
   headerSubtitle: {
     fontSize: 14,

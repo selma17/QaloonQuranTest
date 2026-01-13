@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary,
     paddingTop: 20,
-    paddingBottom: 24,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textLight,
     textAlign: 'center',
+    marginTop: 20
   },
   
   scrollView: {

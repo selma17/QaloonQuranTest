@@ -1,5 +1,5 @@
 // src/screens/TestScreen.js
-// Écran de test optimisé avec zone verset scrollable
+// Écran de test optimisé avec zone verset scrollable - Adapté pour nouvelle structure
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -20,8 +20,7 @@ import quranData from '../data/quranData';
 const TestScreen = ({ navigation, route }) => {
   const { testType, surahNumber, pageFrom, pageTo } = route.params;
 
-  const [currentSurah, setCurrentSurah] = useState(null);
-  const [currentVerse, setCurrentVerse] = useState(0);
+  const [currentVerse, setCurrentVerse] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
   const [score, setScore] = useState(0);
   const [errors, setErrors] = useState(0);
@@ -33,36 +32,34 @@ const TestScreen = ({ navigation, route }) => {
     setLoading(true);
     
     try {
-      let selectedSurah;
+      let randomVerse;
       
       if (testType === 'surah') {
-        selectedSurah = surahNumber;
-      } else {
-        const surahs = quranData.surahs.filter(
-          s => s.page >= pageFrom && s.page <= pageTo
-        );
-        
-        if (surahs.length > 0) {
-          const randomSurah = surahs[Math.floor(Math.random() * surahs.length)];
-          selectedSurah = randomSurah.number;
-        } else {
-          selectedSurah = 1;
-        }
+        // Charger un verset aléatoire de la sourate sélectionnée
+        randomVerse = quranData.getRandomVerseFromSurah(surahNumber);
+      } else if (testType === 'pages') {
+        // Charger un verset aléatoire du range de pages
+        randomVerse = quranData.getRandomVerseFromPageRange(pageFrom, pageTo);
       }
 
-      setCurrentSurah(selectedSurah);
-      
-      const verses = quranData.sampleVerses[selectedSurah];
-      if (verses && verses.length > 0) {
-        const randomVerse = Math.floor(Math.random() * verses.length);
-        setCurrentVerse(randomVerse);
+      if (randomVerse) {
+        setCurrentVerse({
+          surahNumber: randomVerse.surahNumber || surahNumber,
+          surahName: randomVerse.surahName || quranData.getSurahName(surahNumber),
+          verseNumber: randomVerse.number || randomVerse.verseNumber,
+          text: randomVerse.text,
+          page: randomVerse.page,
+          juz: randomVerse.juz,
+        });
       } else {
-        setCurrentVerse(0);
+        // Fallback si aucun verset n'est trouvé
+        Alert.alert('خطأ', 'لم يتم العثور على آيات في النطاق المحدد');
       }
       
       setLoading(false);
     } catch (error) {
       console.error('Erreur lors du chargement du verset:', error);
+      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل الآية');
       setLoading(false);
     }
   }, [testType, surahNumber, pageFrom, pageTo]);
@@ -71,37 +68,49 @@ const TestScreen = ({ navigation, route }) => {
     loadRandomVerse();
   }, [loadRandomVerse]);
 
-  const getCurrentVerseText = () => {
-    if (!currentSurah) return 'جاري التحميل...';
-    
-    const verses = quranData.sampleVerses[currentSurah];
-    if (verses && verses[currentVerse]) {
-      return verses[currentVerse];
-    }
-    
-    return 'الآية غير متوفرة في هذا الإصدار (سيتم إضافتها عند التكامل مع API)';
-  };
-
-  const getSurahName = () => {
-    if (!currentSurah) return '';
-    const surah = quranData.surahs.find(s => s.number === currentSurah);
-    return surah ? surah.name : '';
-  };
-
   const handlePreviousVerse = () => {
-    if (currentVerse > 0) {
-      setCurrentVerse(currentVerse - 1);
+    if (!currentVerse) return;
+
+    const verses = quranData.versesDetailed[currentVerse.surahNumber];
+    if (!verses) return;
+
+    const currentIndex = verses.findIndex(v => v.number === currentVerse.verseNumber);
+    
+    if (currentIndex > 0) {
+      const prevVerse = verses[currentIndex - 1];
+      setCurrentVerse({
+        surahNumber: currentVerse.surahNumber,
+        surahName: currentVerse.surahName,
+        verseNumber: prevVerse.number,
+        text: prevVerse.text,
+        page: prevVerse.page,
+        juz: prevVerse.juz,
+      });
     } else {
-      Alert.alert('تنبيه', 'هذه هي الآية الأولى');
+      Alert.alert('تنبيه', 'هذه هي الآية الأولى في السورة');
     }
   };
 
   const handleNextVerse = () => {
-    const verses = quranData.sampleVerses[currentSurah];
-    if (verses && currentVerse < verses.length - 1) {
-      setCurrentVerse(currentVerse + 1);
+    if (!currentVerse) return;
+
+    const verses = quranData.versesDetailed[currentVerse.surahNumber];
+    if (!verses) return;
+
+    const currentIndex = verses.findIndex(v => v.number === currentVerse.verseNumber);
+    
+    if (currentIndex < verses.length - 1) {
+      const nextVerse = verses[currentIndex + 1];
+      setCurrentVerse({
+        surahNumber: currentVerse.surahNumber,
+        surahName: currentVerse.surahName,
+        verseNumber: nextVerse.number,
+        text: nextVerse.text,
+        page: nextVerse.page,
+        juz: nextVerse.juz,
+      });
     } else {
-      Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في البيانات المتاحة');
+      Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في السورة');
     }
   };
 
@@ -136,7 +145,7 @@ const TestScreen = ({ navigation, route }) => {
     });
   };
 
-  if (loading) {
+  if (loading || !currentVerse) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
@@ -184,8 +193,10 @@ const TestScreen = ({ navigation, route }) => {
             <Text style={styles.questionNumber}>{questionNumber}</Text>
           </View>
           <View style={styles.questionTextContainer}>
-            <Text style={styles.surahName}>سورة {getSurahName()}</Text>
-            <Text style={styles.instructionText}>اقرأ من قوله تعالى:</Text>
+            <Text style={styles.surahName}>سورة {currentVerse.surahName}</Text>
+            <Text style={styles.instructionText}>
+              اقرأ من قوله تعالى (آية {currentVerse.verseNumber}):
+            </Text>
           </View>
         </View>
 
@@ -202,9 +213,16 @@ const TestScreen = ({ navigation, route }) => {
             contentContainerStyle={styles.verseScrollContent}
             showsVerticalScrollIndicator={true}
             persistentScrollbar={true}>
-            <Text style={styles.verseText}>{getCurrentVerseText()}</Text>
+            <Text style={styles.verseText}>{currentVerse.text}</Text>
           </ScrollView>
           <View style={styles.verseOrnament} />
+          
+          {/* Métadonnées */}
+          <View style={styles.verseMetadata}>
+            <Text style={styles.metadataText}>
+              صفحة {currentVerse.page} • جزء {currentVerse.juz}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -332,6 +350,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   backButton: {
     width: 36,
@@ -341,6 +361,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
+    marginTop: 15,
   },
   backButtonText: {
     fontSize: 18,
@@ -355,6 +376,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.textLight,
+    marginTop: 25,
+    marginRight: 15,
   },
   
   // SCORE BAR - COMPACT
@@ -477,6 +500,17 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  verseMetadata: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  metadataText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   
   // CONTROLS - FIXED BOTTOM - COMPACT
