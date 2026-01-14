@@ -77,6 +77,7 @@ const TestScreen = ({ navigation, route }) => {
     const currentIndex = verses.findIndex(v => v.number === currentVerse.verseNumber);
     
     if (currentIndex > 0) {
+      // Verset précédent dans la même sourate
       const prevVerse = verses[currentIndex - 1];
       setCurrentVerse({
         surahNumber: currentVerse.surahNumber,
@@ -87,7 +88,34 @@ const TestScreen = ({ navigation, route }) => {
         juz: prevVerse.juz,
       });
     } else {
-      Alert.alert('تنبيه', 'هذه هي الآية الأولى في السورة');
+      // Première ayah de la sourate
+      if (testType === 'pages') {
+        // En mode pages: aller à la sourate précédente si elle existe dans le range
+        const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
+        const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
+        
+        if (currentSurahIndex > 0) {
+          // Il y a une sourate précédente dans le range
+          const prevSurahNumber = surahs[currentSurahIndex - 1];
+          const prevSurahVerses = quranData.versesDetailed[prevSurahNumber];
+          
+          if (prevSurahVerses && prevSurahVerses.length > 0) {
+            const lastVerse = prevSurahVerses[prevSurahVerses.length - 1];
+            setCurrentVerse({
+              surahNumber: prevSurahNumber,
+              surahName: quranData.getSurahName(prevSurahNumber),
+              verseNumber: lastVerse.number,
+              text: lastVerse.text,
+              page: lastVerse.page,
+              juz: lastVerse.juz,
+            });
+          }
+        } else {
+          Alert.alert('تنبيه', 'هذه هي الآية الأولى في النطاق المحدد');
+        }
+      } else {
+        Alert.alert('تنبيه', 'هذه هي الآية الأولى في السورة');
+      }
     }
   };
 
@@ -100,6 +128,7 @@ const TestScreen = ({ navigation, route }) => {
     const currentIndex = verses.findIndex(v => v.number === currentVerse.verseNumber);
     
     if (currentIndex < verses.length - 1) {
+      // Verset suivant dans la même sourate
       const nextVerse = verses[currentIndex + 1];
       setCurrentVerse({
         surahNumber: currentVerse.surahNumber,
@@ -110,7 +139,34 @@ const TestScreen = ({ navigation, route }) => {
         juz: nextVerse.juz,
       });
     } else {
-      Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في السورة');
+      // Dernière ayah de la sourate
+      if (testType === 'pages') {
+        // En mode pages: aller à la sourate suivante si elle existe dans le range
+        const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
+        const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
+        
+        if (currentSurahIndex < surahs.length - 1) {
+          // Il y a une sourate suivante dans le range
+          const nextSurahNumber = surahs[currentSurahIndex + 1];
+          const nextSurahVerses = quranData.versesDetailed[nextSurahNumber];
+          
+          if (nextSurahVerses && nextSurahVerses.length > 0) {
+            const firstVerse = nextSurahVerses[0];
+            setCurrentVerse({
+              surahNumber: nextSurahNumber,
+              surahName: quranData.getSurahName(nextSurahNumber),
+              verseNumber: firstVerse.number,
+              text: firstVerse.text,
+              page: firstVerse.page,
+              juz: firstVerse.juz,
+            });
+          }
+        } else {
+          Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في النطاق المحدد');
+        }
+      } else {
+        Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في السورة');
+      }
     }
   };
 

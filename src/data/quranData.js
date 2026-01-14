@@ -105,7 +105,7 @@ export const quranData = {
 
   // Helpers utiles
   getSurahName: (number) => {
-    const surah = suranData.surahs.find(s => s.number === number);
+    const surah = quranData.surahs.find(s => s.number === number);
     return surah ? surah.name : 'سورة غير معروفة';
   },
 

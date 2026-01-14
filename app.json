@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "QuranQaloonTestApp",
-    "slug": "QuranQaloonTestApp",
+    "name": "إتقان - Itqan",
+    "slug": "itqan-quran-test",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/quranIcon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/quranWalp.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,12 +16,15 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.selma.itqan",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/quranIcon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
+    "permissions": [],
     "web": {
       "favicon": "./assets/favicon.png"
     }
