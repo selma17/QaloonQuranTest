@@ -1,6 +1,3 @@
-// src/screens/PageSelectionScreen.js
-// Écran de sélection de pages avec design amélioré
-
 import React, { useState } from 'react';
 import {
   View,
@@ -56,19 +53,17 @@ const PageSelectionScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>→</Text>
+          <Text style={styles.backButtonText}>⬅</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>اختبار في صفحات معينة</Text>
+          <Text style={styles.headerTitle}>مواضع في صفحات معينة</Text>
         </View>
       </View>
 
-      {/* Content */}
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -82,24 +77,24 @@ const PageSelectionScreen = ({ navigation }) => {
             </Text>
           </View>
 
-          {/* Input Card */}
           <View style={styles.inputCard}>
-            <Text style={styles.cardTitle}>نطاق الصفحات</Text>
             
-            {/* From Input */}
+            <View style={styles.separator}>
+              <View style={styles.separatorLine} />
+              <Text style={styles.separatorText}> من الصفحة</Text>
+              <View style={styles.separatorLine} />
+            </View>
             <View style={styles.inputGroup}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>من الصفحة</Text>
                 <TextInput
                   style={styles.input}
                   value={pageFrom}
                   onChangeText={(text) => {
-                    // Only allow numbers
                     const cleaned = text.replace(/[^0-9]/g, '');
                     setPageFrom(cleaned);
                   }}
                   keyboardType="number-pad"
-                  placeholder="1"
+                  placeholder="--"
                   placeholderTextColor={colors.textSecondary}
                   maxLength={3}
                   returnKeyType="next"
@@ -108,17 +103,14 @@ const PageSelectionScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Separator */}
             <View style={styles.separator}>
               <View style={styles.separatorLine} />
-              <Text style={styles.separatorText}>إلى</Text>
+              <Text style={styles.separatorText}> إلى الصفحة</Text>
               <View style={styles.separatorLine} />
             </View>
 
-            {/* To Input */}
             <View style={styles.inputGroup}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>إلى الصفحة</Text>
                 <TextInput
                   style={styles.input}
                   value={pageTo}
@@ -127,7 +119,7 @@ const PageSelectionScreen = ({ navigation }) => {
                     setPageTo(cleaned);
                   }}
                   keyboardType="number-pad"
-                  placeholder="604"
+                  placeholder="--"
                   placeholderTextColor={colors.textSecondary}
                   maxLength={3}
                   returnKeyType="done"
@@ -138,29 +130,8 @@ const PageSelectionScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Info Card */}
           {isValid && (
-            <View style={styles.rangeInfoCard}>
-              <View style={styles.rangeInfoHeader}>
-                <Text style={styles.rangeInfoTitle}>معلومات النطاق</Text>
-              </View>
-              
-              <View style={styles.rangeStats}>
-                <View style={styles.rangeStat}>
-                  <Text style={styles.rangeStatLabel}>من</Text>
-                  <Text style={styles.rangeStatValue}>{pageFrom}</Text>
-                </View>
-                
-                <View style={styles.rangeStatArrow}>
-                  <Text style={styles.rangeStatArrowText}>←</Text>
-                </View>
-                
-                <View style={styles.rangeStat}>
-                  <Text style={styles.rangeStatLabel}>إلى</Text>
-                  <Text style={styles.rangeStatValue}>{pageTo}</Text>
-                </View>
-              </View>
-              
+            <View style={styles.rangeInfoCard}>  
               <View style={styles.pageCountBox}>
                 <Text style={styles.pageCountLabel}>عدد الصفحات:</Text>
                 <Text style={styles.pageCountValue}>{pageCount}</Text>
@@ -168,7 +139,6 @@ const PageSelectionScreen = ({ navigation }) => {
             </View>
           )}
 
-          {/* Help Box */}
           <View style={styles.helpBox}>
             <Text style={styles.helpIcon}>ℹ️</Text>
             <View style={styles.helpContent}>
@@ -179,7 +149,6 @@ const PageSelectionScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Start Button */}
           <TouchableOpacity
             style={[
               styles.startButton,
@@ -191,11 +160,6 @@ const PageSelectionScreen = ({ navigation }) => {
             <Text style={styles.startButtonText}>
               {isValid ? 'بدء الاختبار' : 'أدخل نطاق الصفحات'}
             </Text>
-            {isValid && (
-              <View style={styles.startButtonIcon}>
-                <Text style={styles.startButtonIconText}>←</Text>
-              </View>
-            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -234,9 +198,10 @@ const styles = StyleSheet.create({
     marginTop: 30
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: 25,
     color: colors.textLight,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
   headerContent: {
     flex: 1,
@@ -297,7 +262,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
     textAlign: 'right',
-    marginBottom: 24,
+
   },
   inputGroup: {
     marginBottom: 8,
@@ -315,7 +280,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: colors.bgLight,
     borderRadius: 14,
-    padding: 18,
+    padding: 15,
     fontSize: 24,
     textAlign: 'center',
     color: colors.primary,

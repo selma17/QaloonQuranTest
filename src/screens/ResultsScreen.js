@@ -1,6 +1,3 @@
-// src/screens/ResultsScreen.js
-// Écran des résultats - Version compacte et optimisée
-
 import React from 'react';
 import {
   View,
@@ -12,8 +9,20 @@ import {
   ScrollView,
 } from 'react-native';
 import colors from '../styles/colors';
+import { wp, hp, fp, SPACING, FONT_SIZES, RADIUS } from '../utils/responsive';
 
 const ResultsScreen = ({ navigation, route }) => {
+  const { testType, surahNumber, pageFrom, pageTo } = route.params;
+
+  const handleReady = () => {
+    navigation.navigate('Test', {
+      testType,
+      surahNumber,
+      pageFrom,
+      pageTo,
+    });
+  };
+
   const { score, errors } = route.params;
 
   const total = score + errors;
@@ -42,7 +51,7 @@ const ResultsScreen = ({ navigation, route }) => {
       return {
         title: 'راجع حفظك',
         message: 'بالمثابرة ستصل للإتقان',
-        emoji: '📚',
+        emoji: '❤️',
       };
     }
   };
@@ -61,18 +70,15 @@ const ResultsScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       
-      {/* Header - COMPACT */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>نتائج الاختبار</Text>
       </View>
 
-      {/* Content */}
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         
-        {/* Emoji & Result - COMPACT */}
         <View style={styles.resultHeader}>
           <View style={styles.emojiCircle}>
             <Text style={styles.emoji}>{result.emoji}</Text>
@@ -81,12 +87,10 @@ const ResultsScreen = ({ navigation, route }) => {
           <Text style={styles.resultMessage}>{result.message}</Text>
         </View>
 
-        {/* Percentage Circle - REDUCED */}
         <View style={styles.percentageCircle}>
           <Text style={styles.percentageValue}>{percentage}%</Text>
         </View>
 
-        {/* Stats Cards - COMPACT */}
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, styles.statCardSuccess]}>
             <Text style={styles.statIcon}>✓</Text>
@@ -113,15 +117,13 @@ const ResultsScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Quote - COMPACT */}
         <View style={styles.quoteCard}>
           <Text style={styles.quoteText}>
-            ﴿ وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ ﴾
+            ﴿ وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِّلْمُؤْمِنِينَ﴾
           </Text>
-          <Text style={styles.quoteReference}>القمر - 17</Text>
+          <Text style={styles.quoteReference}>"الإسرَاء - 82</Text>
         </View>
 
-        {/* Buttons - COMPACT */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={styles.primaryButton}
@@ -132,7 +134,7 @@ const ResultsScreen = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={handleRestartTest}
+            onPress={handleReady}
             activeOpacity={0.85}>
             <Text style={styles.secondaryButtonText}>إعادة الاختبار</Text>
           </TouchableOpacity>
@@ -147,111 +149,107 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bgLight,
   },
-  
-  // HEADER - COMPACT
+
   header: {
     backgroundColor: colors.primary,
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingTop: hp(20),
+    paddingBottom: hp(20),
+    paddingHorizontal: wp(20),
+    borderBottomLeftRadius: RADIUS.xxl,
+    borderBottomRightRadius: RADIUS.xxl,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: hp(4) },
     shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowRadius: wp(8),
     elevation: 6,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: fp(22),
     fontWeight: '700',
     color: colors.textLight,
     textAlign: 'center',
-    marginTop: 20
+    marginTop: hp(20)
   },
   
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: hp(20),
   },
   
-  // RESULT HEADER - COMPACT
   resultHeader: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: hp(20),
   },
   emojiCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: wp(60),
+    height: wp(60),
+    borderRadius: wp(35),
     backgroundColor: colors.bgWhite,
     borderWidth: 3,
     borderColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: hp(12),
     shadowColor: colors.secondary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowRadius: wp(6),
     elevation: 4,
   },
   emoji: {
-    fontSize: 36,
+    fontSize: fp(30),
   },
   resultTitle: {
-    fontSize: 26,
+    fontSize: fp(36),
     fontWeight: '700',
     color: colors.primary,
-    marginBottom: 6,
+    marginBottom: hp(6),
   },
   resultMessage: {
-    fontSize: 15,
+    fontSize: fp(15),
     color: colors.textSecondary,
     textAlign: 'center',
   },
   
-  // PERCENTAGE - REDUCED
   percentageCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: wp(120),
+    height: wp(120),
+    borderRadius: wp(70),
     backgroundColor: colors.bgWhite,
     borderWidth: 6,
     borderColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: hp(20),
     shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: hp(4) },
     shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowRadius: wp(8),
     elevation: 5,
   },
   percentageValue: {
-    fontSize: 44,
+    fontSize: fp(35),
     fontWeight: '800',
     color: colors.secondary,
   },
   
-  // STATS - COMPACT
   statsContainer: {
-    gap: 12,
-    marginBottom: 20,
+    gap: hp(12),
+    marginBottom: hp(20),
   },
   statCard: {
     backgroundColor: colors.bgWhite,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: wp(16),
+    padding: wp(16),
     flexDirection: 'row-reverse',
     alignItems: 'center',
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: hp(2) },
     shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowRadius: wp(4),
     elevation: 2,
     borderWidth: 1,
     borderColor: colors.borderLight,
@@ -266,10 +264,10 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.error,
   },
   statIcon: {
-    fontSize: 20,
+    fontSize: fp(20),
     color: colors.primary,
     fontWeight: 'bold',
-    width: 32,
+    width: wp(32),
     textAlign: 'center',
   },
   statContent: {
@@ -279,68 +277,67 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statLabel: {
-    fontSize: 15,
+    fontSize: fp(15),
     color: colors.textSecondary,
   },
   statValue: {
-    fontSize: 26,
+    fontSize: fp(26),
     fontWeight: '700',
     color: colors.primary,
   },
   
-  // QUOTE - COMPACT
   quoteCard: {
     backgroundColor: colors.primaryLight,
-    borderRadius: 16,
+    borderRadius: wp(16),
     padding: 18,
-    marginBottom: 20,
+    marginBottom: hp(20),
     borderTopWidth: 3,
     borderTopColor: colors.secondary,
   },
   quoteText: {
-    fontSize: 17,
+    fontSize: fp(17),
     color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 32,
-    marginBottom: 8,
+    marginBottom: hp(8),
     fontWeight: '600',
   },
   quoteReference: {
-    fontSize: 12,
+    fontSize: fp(12),
     color: colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
   },
   
-  // BUTTONS - COMPACT
   buttonsContainer: {
-    gap: 12,
+    gap: hp(12),
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: hp(16),
+    borderRadius: wp(16),
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: hp(3) },
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 4,
   },
   primaryButtonText: {
-    fontSize: 18,
+    fontSize: fp(18),
     fontWeight: '700',
     color: colors.textLight,
     textAlign: 'center',
   },
   secondaryButton: {
     backgroundColor: colors.bgWhite,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 2,
+    paddingVertical: hp(14),
+    borderRadius: wp(14),
+    borderWidth: wp(2),
     borderColor: colors.primary,
+    marginBottom: hp(20)
   },
   secondaryButtonText: {
-    fontSize: 16,
+    fontSize: fp(16),
     fontWeight: '600',
     color: colors.primary,
     textAlign: 'center',

@@ -1,6 +1,3 @@
-// src/styles/globalStyles.js
-// Styles globaux réutilisables dans toute l'application
-
 import { StyleSheet } from 'react-native';
 import colors from './colors';
 

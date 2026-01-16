@@ -1,6 +1,3 @@
-// src/screens/TestScreen.js
-// Écran de test optimisé avec zone verset scrollable - Adapté pour nouvelle structure
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -16,6 +13,7 @@ import {
 } from 'react-native';
 import colors from '../styles/colors';
 import quranData from '../data/quranData';
+import { wp, hp, fp, SPACING, FONT_SIZES, RADIUS } from '../utils/responsive';
 
 const TestScreen = ({ navigation, route }) => {
   const { testType, surahNumber, pageFrom, pageTo } = route.params;
@@ -35,10 +33,8 @@ const TestScreen = ({ navigation, route }) => {
       let randomVerse;
       
       if (testType === 'surah') {
-        // Charger un verset aléatoire de la sourate sélectionnée
         randomVerse = quranData.getRandomVerseFromSurah(surahNumber);
       } else if (testType === 'pages') {
-        // Charger un verset aléatoire du range de pages
         randomVerse = quranData.getRandomVerseFromPageRange(pageFrom, pageTo);
       }
 
@@ -52,7 +48,6 @@ const TestScreen = ({ navigation, route }) => {
           juz: randomVerse.juz,
         });
       } else {
-        // Fallback si aucun verset n'est trouvé
         Alert.alert('خطأ', 'لم يتم العثور على آيات في النطاق المحدد');
       }
       
@@ -77,7 +72,6 @@ const TestScreen = ({ navigation, route }) => {
     const currentIndex = verses.findIndex(v => v.number === currentVerse.verseNumber);
     
     if (currentIndex > 0) {
-      // Verset précédent dans la même sourate
       const prevVerse = verses[currentIndex - 1];
       setCurrentVerse({
         surahNumber: currentVerse.surahNumber,
@@ -88,14 +82,11 @@ const TestScreen = ({ navigation, route }) => {
         juz: prevVerse.juz,
       });
     } else {
-      // Première ayah de la sourate
       if (testType === 'pages') {
-        // En mode pages: aller à la sourate précédente si elle existe dans le range
         const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
         const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
         
         if (currentSurahIndex > 0) {
-          // Il y a une sourate précédente dans le range
           const prevSurahNumber = surahs[currentSurahIndex - 1];
           const prevSurahVerses = quranData.versesDetailed[prevSurahNumber];
           
@@ -128,7 +119,6 @@ const TestScreen = ({ navigation, route }) => {
     const currentIndex = verses.findIndex(v => v.number === currentVerse.verseNumber);
     
     if (currentIndex < verses.length - 1) {
-      // Verset suivant dans la même sourate
       const nextVerse = verses[currentIndex + 1];
       setCurrentVerse({
         surahNumber: currentVerse.surahNumber,
@@ -139,14 +129,11 @@ const TestScreen = ({ navigation, route }) => {
         juz: nextVerse.juz,
       });
     } else {
-      // Dernière ayah de la sourate
       if (testType === 'pages') {
-        // En mode pages: aller à la sourate suivante si elle existe dans le range
         const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
         const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
         
         if (currentSurahIndex < surahs.length - 1) {
-          // Il y a une sourate suivante dans le range
           const nextSurahNumber = surahs[currentSurahIndex + 1];
           const nextSurahVerses = quranData.versesDetailed[nextSurahNumber];
           
@@ -216,7 +203,7 @@ const TestScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       
-      {/* Header - COMPACT */}
+      {/* Header - RESPONSIVE */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -228,7 +215,7 @@ const TestScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Score Bar - COMPACT */}
+      {/* Score Bar - RESPONSIVE */}
       <View style={styles.scoreBar}>
         <View style={styles.scoreItem}>
           <Text style={styles.scoreValue}>{errors}</Text>
@@ -241,9 +228,9 @@ const TestScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Main Content - NON SCROLLABLE */}
+      {/* Main Content */}
       <View style={styles.mainContent}>
-        {/* Question Info - COMPACT */}
+        {/* Question Info */}
         <View style={styles.questionInfo}>
           <View style={styles.questionBadge}>
             <Text style={styles.questionNumber}>{questionNumber}</Text>
@@ -256,12 +243,12 @@ const TestScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Bismillah - COMPACT */}
+        {/* Bismillah */}
         <View style={styles.bismillahBox}>
           <Text style={styles.bismillah}>﷽</Text>
         </View>
 
-        {/* Verse Card - SCROLLABLE CONTENT ONLY */}
+        {/* Verse Card - SCROLLABLE */}
         <View style={styles.verseCard}>
           <View style={styles.verseOrnament} />
           <ScrollView 
@@ -282,7 +269,7 @@ const TestScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Control Buttons - FIXED AT BOTTOM */}
+      {/* Control Buttons - FIXED BOTTOM */}
       <View style={styles.controlsContainer}>
         <View style={styles.controlsRow}>
           <TouchableOpacity
@@ -387,40 +374,40 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
+    gap: SPACING.md,
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     color: colors.textSecondary,
   },
   
-  // HEADER - COMPACT
+  // HEADER
   header: {
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: hp(12),
+    paddingHorizontal: wp(16),
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: hp(2) },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: wp(4),
     elevation: 3,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderBottomLeftRadius: RADIUS.xl,
+    borderBottomRightRadius: RADIUS.xl,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: wp(36),
+    height: wp(36),
+    borderRadius: wp(18),
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
-    marginTop: 15,
+    marginLeft: wp(10),
+    marginTop: hp(15),
   },
   backButtonText: {
-    fontSize: 18,
+    fontSize: fp(18),
     color: colors.textLight,
     fontWeight: 'bold',
   },
@@ -429,19 +416,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: colors.textLight,
-    marginTop: 25,
-    marginRight: 15,
+    marginTop: hp(25),
+    marginRight: wp(15),
   },
   
-  // SCORE BAR - COMPACT
+  // SCORE BAR
   scoreBar: {
     backgroundColor: colors.bgWhite,
     flexDirection: 'row-reverse',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: hp(10),
+    paddingHorizontal: wp(20),
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
   },
@@ -450,43 +437,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreValue: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: '700',
     color: colors.primary,
   },
   scoreLabel: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     color: colors.textSecondary,
   },
   scoreDivider: {
     width: 1,
     backgroundColor: colors.border,
-    marginHorizontal: 16,
+    marginHorizontal: wp(16),
   },
   
-  // MAIN CONTENT - NON SCROLLABLE
+  // MAIN CONTENT
   mainContent: {
     flex: 1,
-    padding: 16,
+    padding: SPACING.md,
   },
   
-  // QUESTION INFO - COMPACT
+  // QUESTION INFO
   questionInfo: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 10,
+    marginBottom: hp(12),
+    gap: wp(10),
   },
   questionBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: wp(40),
+    height: wp(40),
+    borderRadius: wp(20),
     backgroundColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   questionNumber: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: colors.textLight,
   },
@@ -495,176 +482,175 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   surahName: {
-    fontSize: 15,
+    fontSize: FONT_SIZES.surahName,
     fontWeight: '600',
     color: colors.primary,
   },
   instructionText: {
-    fontSize: 13,
+    fontSize: FONT_SIZES.sm,
     color: colors.textSecondary,
   },
   
-  // BISMILLAH - COMPACT
+  // BISMILLAH
   bismillahBox: {
     backgroundColor: colors.bgWhite,
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: hp(12),
+    borderRadius: RADIUS.md,
+    marginBottom: hp(12),
     borderWidth: 1,
     borderColor: colors.borderLight,
   },
   bismillah: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     color: colors.primary,
     textAlign: 'center',
     fontWeight: '600',
   },
   
-  // VERSE CARD - SCROLLABLE ZONE ONLY
+  // VERSE CARD
   verseCard: {
     flex: 1,
     backgroundColor: colors.bgWhite,
-    borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    borderRadius: RADIUS.xl,
+    paddingVertical: hp(16),
+    paddingHorizontal: wp(20),
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: hp(4) },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: wp(8),
     elevation: 4,
     borderWidth: 2,
     borderColor: colors.secondary,
-    position: 'relative',
   },
   verseOrnament: {
-    width: 50,
+    width: wp(50),
     height: 2,
     backgroundColor: colors.secondary,
     alignSelf: 'center',
     borderRadius: 1,
-    marginVertical: 8,
+    marginVertical: hp(8),
   },
   verseScrollView: {
     flex: 1,
   },
   verseScrollContent: {
-    paddingVertical: 8,
+    paddingVertical: hp(8),
   },
   verseText: {
-    fontSize: 22,
-    lineHeight: 42,
+    fontSize: FONT_SIZES.verse,
+    lineHeight: fp(42),
     color: colors.textPrimary,
     textAlign: 'center',
     fontWeight: '600',
   },
   verseMetadata: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: hp(8),
+    paddingTop: hp(8),
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
   },
   metadataText: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.caption,
     color: colors.textSecondary,
     textAlign: 'center',
   },
   
-  // CONTROLS - FIXED BOTTOM - COMPACT
+  // CONTROLS
   controlsContainer: {
     backgroundColor: colors.bgWhite,
-    padding: 12,
+    padding: SPACING.md,
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
-    gap: 10,
+    gap: hp(10),
   },
   controlsRow: {
     flexDirection: 'row-reverse',
-    gap: 10,
+    gap: wp(10),
   },
   controlButton: {
     flex: 1,
     backgroundColor: colors.bgLight,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: hp(12),
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
   controlButtonText: {
-    fontSize: 13,
+    fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     color: colors.primary,
     textAlign: 'center',
   },
   newQuestionButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: hp(14),
+    borderRadius: RADIUS.lg,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: hp(2) },
     shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowRadius: wp(4),
     elevation: 3,
   },
   newQuestionButtonText: {
-    fontSize: 17,
+    fontSize: FONT_SIZES.buttonText,
     fontWeight: '700',
     color: colors.textLight,
     textAlign: 'center',
   },
   quitButton: {
     backgroundColor: colors.bgLight,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: hp(12),
+    borderRadius: RADIUS.md,
     borderWidth: 2,
     borderColor: colors.error,
   },
   quitButtonText: {
-    fontSize: 15,
+    fontSize: FONT_SIZES.md,
     fontWeight: '600',
     color: colors.error,
     textAlign: 'center',
   },
   
-  // MODALS - COMPACT
+  // MODALS
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: SPACING.lg,
   },
   modalContent: {
     backgroundColor: colors.bgWhite,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
     width: '100%',
-    maxWidth: 360,
+    maxWidth: wp(360),
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: hp(6) },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowRadius: wp(12),
     elevation: 10,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.xl,
     fontWeight: '700',
     color: colors.primary,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: hp(16),
   },
   modalText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 26,
+    marginBottom: hp(24),
+    lineHeight: fp(26),
   },
   modalButtons: {
-    gap: 10,
+    gap: hp(10),
   },
   modalButton: {
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: hp(14),
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
   },
   modalButtonPrimary: {
@@ -682,7 +668,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   modalButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     fontWeight: '600',
     color: colors.textLight,
   },

@@ -1,6 +1,3 @@
-// src/navigation/AppNavigator.js
-// Configuration de la navigation entre les écrans
-
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -21,8 +18,8 @@ const AppNavigator = () => {
       <Stack.Navigator
         initialRouteName="Main"
         screenOptions={{
-          headerShown: false, // Pas de header par défaut
-          animation: 'slide_from_right', // Animation de transition
+          headerShown: false,
+          animation: 'slide_from_right',
           contentStyle: { backgroundColor: '#f8f6f0' },
         }}>
         

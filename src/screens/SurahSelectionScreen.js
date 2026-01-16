@@ -1,6 +1,3 @@
-// src/screens/SurahSelectionScreen.js
-// Écran de sélection de sourate avec design amélioré
-
 import React, { useState } from 'react';
 import {
   View,
@@ -39,32 +36,28 @@ const SurahSelectionScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>→</Text>
+          <Text style={styles.backButtonText}>⬅</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>اختبار في سورة معينة</Text>
+          <Text style={styles.headerTitle}>مواضع في سورة معينة</Text>
         </View>
       </View>
 
-      {/* Content */}
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
         
         <View style={styles.content}>
-          {/* Instruction */}
           <View style={styles.instructionBox}>
             <Text style={styles.instructionText}>
               اختر السورة التي تريد اختبار حفظها
             </Text>
           </View>
 
-          {/* Picker Card */}
           <View style={styles.pickerCard}>
             <Text style={styles.label}>اختر السورة:</Text>
             
@@ -76,7 +69,7 @@ const SurahSelectionScreen = ({ navigation }) => {
                 dropdownIconColor={colors.primary}
                 mode="dropdown">
                 <Picker.Item 
-                  label="-- اختر السورة --" 
+                  label="-- سورة --" 
                   value="" 
                   style={styles.pickerItem}
                 />
@@ -93,7 +86,6 @@ const SurahSelectionScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Info sur la sourate sélectionnée */}
           {selectedSurahData && (
             <View style={styles.surahInfoCard}>
               <View style={styles.surahInfoHeader}>
@@ -122,7 +114,6 @@ const SurahSelectionScreen = ({ navigation }) => {
             </View>
           )}
 
-          {/* Bouton démarrer */}
           <TouchableOpacity
             style={[
               styles.startButton,
@@ -134,11 +125,6 @@ const SurahSelectionScreen = ({ navigation }) => {
             <Text style={styles.startButtonText}>
               {selectedSurah ? 'بدء الاختبار' : 'اختر السورة أولاً'}
             </Text>
-            {selectedSurah && (
-              <View style={styles.startButtonIcon}>
-                <Text style={styles.startButtonIconText}>←</Text>
-              </View>
-            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -177,9 +163,10 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: 25,
     color: colors.textLight,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
   headerContent: {
     flex: 1,

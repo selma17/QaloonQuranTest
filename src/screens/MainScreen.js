@@ -1,6 +1,3 @@
-// src/screens/MainScreen.js
-// Écran principal avec design amélioré
-
 import React from 'react';
 import {
   View,
@@ -25,18 +22,14 @@ const MainScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         
-        {/* Header avec gradient visuel */}
         <View style={styles.headerContainer}>
           <View style={styles.ornamentTop} />
-          <Text style={styles.mainTitle}>اختبارات القرآن الكريم</Text>
+          <Text style={styles.mainTitle}>مواضع في القرآن الكريم</Text>
           <Text style={styles.subtitle}>برواية قالون عن نافع المدني</Text>
           <View style={styles.ornamentBottom} />
         </View>
 
-        {/* Cartes de test */}
         <View style={styles.cardsContainer}>
-          
-          {/* Carte 1 : Test par sourate */}
           <TouchableOpacity
             style={styles.card}
             onPress={() => navigation.navigate('SurahSelection')}
@@ -45,7 +38,7 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.iconContainer}>
               <Text style={styles.icon}>📖</Text>
             </View>
-            <Text style={styles.cardTitle}>اختبار في سورة معينة</Text>
+            <Text style={styles.cardTitle}>مواضع في سورة معينة</Text>
             <Text style={styles.cardDescription}>
               اختر سورة واختبر حفظك آياتها
             </Text>
@@ -54,7 +47,6 @@ const MainScreen = ({ navigation }) => {
             </View>
           </TouchableOpacity>
 
-          {/* Carte 2 : Test par pages */}
           <TouchableOpacity
             style={styles.card}
             onPress={() => navigation.navigate('PageSelection')}
@@ -63,7 +55,7 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.iconContainer}>
               <Text style={styles.icon}>📄</Text>
             </View>
-            <Text style={styles.cardTitle}>اختبار في صفحات معينة</Text>
+            <Text style={styles.cardTitle}>مواضع في صفحات معينة</Text>
             <Text style={styles.cardDescription}>
               حدد نطاق الصفحات من المصحف
             </Text>
@@ -73,7 +65,6 @@ const MainScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Section info */}
         <View style={styles.infoSection}>
           <View style={styles.infoHeader}>
             <View style={styles.infoDivider} />
@@ -86,13 +77,6 @@ const MainScreen = ({ navigation }) => {
             اختر نوع الاختبار المناسب وابدأ رحلتك في تثبيت الحفظ ومراجعة كتاب الله.
           </Text>
           
-          {/* Citation coranique */}
-          <View style={styles.quoteBox}>
-            <Text style={styles.quoteText}>
-              ﴿ وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ ﴾
-            </Text>
-            <Text style={styles.quoteReference}>سورة القمر</Text>
-          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,6 +1,3 @@
-// src/screens/DuaaScreen.js
-// Écran de Duaa - Version compacte et optimisée
-
 import React from 'react';
 import {
   View,
@@ -28,34 +25,27 @@ const DuaaScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
-      
-      {/* Header - COMPACT */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>→</Text>
+          <Text style={styles.backButtonText}>⬅</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>قبل البدء</Text>
         </View>
       </View>
-
-      {/* Content */}
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
-        
-        {/* Bismillah Circle - REDUCED */}
+
         <View style={styles.bismillahCircle}>
           <Text style={styles.bismillahText}>﷽</Text>
         </View>
 
-        {/* Duaa Title - COMPACT */}
-        <Text style={styles.duaaTitle}>دعاء قبل المذاكرة</Text>
+        <Text style={styles.duaaTitle}>دعاء قبل الاختبار</Text>
 
-        {/* Duaa Card - COMPACT */}
         <View style={styles.duaaCard}>
           <Text style={styles.duaaText}>رَبِّ اشْرَحْ لِي صَدْرِي</Text>
           <View style={styles.duaaSeparator} />
@@ -64,7 +54,6 @@ const DuaaScreen = ({ navigation, route }) => {
           <Text style={styles.duaaText}>وَ اٗحْلُلْ عُقْدَةً مِنْ لِسَانِي يَفْقَهُ قَوْلِي</Text>
         </View>
 
-        {/* Test Info - COMPACT */}
         <View style={styles.testInfoCard}>
           <Text style={styles.testInfoIcon}>🖇️</Text>
           <Text style={styles.testInfoTitle}>
@@ -75,7 +64,6 @@ const DuaaScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Ready Button */}
         <TouchableOpacity
           style={styles.readyButton}
           onPress={handleReady}
@@ -93,7 +81,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgLight,
   },
   
-  // HEADER - COMPACT
   header: {
     backgroundColor: colors.primary,
     paddingTop: 16,
@@ -110,19 +97,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
-    marginTop: 20
+    marginLeft: 12,
+    marginTop: 30
   },
   backButtonText: {
-    fontSize: 22,
+    fontSize: 25,
     color: colors.textLight,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
   headerContent: {
     flex: 1,
@@ -144,7 +132,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   
-  // BISMILLAH - REDUCED
   bismillahCircle: {
     width: 100,
     height: 100,
@@ -167,7 +154,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   
-  // DUAA TITLE - COMPACT
   duaaTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -175,7 +161,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   
-  // DUAA CARD - COMPACT
   duaaCard: {
     width: '100%',
     backgroundColor: colors.bgWhite,
@@ -208,7 +193,6 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   
-  // TEST INFO - COMPACT
   testInfoCard: {
     width: '100%',
     backgroundColor: colors.primaryLight,
@@ -232,7 +216,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   
-  // READY BUTTON
   readyButton: {
     width: '100%',
     backgroundColor: colors.primary,
@@ -252,7 +235,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  // MOTIVATION - COMPACT
   motivationText: {
     fontSize: 14,
     color: colors.textSecondary,
