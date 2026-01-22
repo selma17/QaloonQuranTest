@@ -11,7 +11,7 @@ import {
 import colors from '../styles/colors';
 
 const DuaaScreen = ({ navigation, route }) => {
-  const { testType, surahNumber, pageFrom, pageTo } = route.params;
+  const { testType, surahNumber, pageFrom, pageTo, hizbNumber } = route.params;
 
   const handleReady = () => {
     navigation.navigate('Test', {
@@ -19,7 +19,18 @@ const DuaaScreen = ({ navigation, route }) => {
       surahNumber,
       pageFrom,
       pageTo,
+      hizbNumber,
     });
+  };
+
+  const getTestInfo = () => {
+    if (testType === 'surah') {
+      return `السورة رقم ${surahNumber}`;
+    } else if (testType === 'Hizb') {
+      return `الحزب رقم ${hizbNumber}`;
+    } else {
+      return `الصفحات ${pageFrom} - ${pageTo}`;
+    }
   };
 
   return (
@@ -47,20 +58,17 @@ const DuaaScreen = ({ navigation, route }) => {
         <Text style={styles.duaaTitle}>دعاء قبل الاختبار</Text>
 
         <View style={styles.duaaCard}>
-          <Text style={styles.duaaText}>رَبِّ اشْرَحْ لِي صَدْرِي</Text>
+          <Text style={styles.duaaText}>رَبِّ اشْرَحْ لِي صَدْرِي</Text>
           <View style={styles.duaaSeparator} />
-          <Text style={styles.duaaText}>وَ يَسِّرْ لِي أَمْرِي</Text>
+          <Text style={styles.duaaText}>وَ يَسِّرْ لِي أَمْرِي</Text>
           <View style={styles.duaaSeparator} />
-          <Text style={styles.duaaText}>وَ اٗحْلُلْ عُقْدَةً مِنْ لِسَانِي يَفْقَهُ قَوْلِي</Text>
+          <Text style={styles.duaaText}>وَ احْلُلْ عُقْدَةً مِنْ لِسَانِي يَفْقَهُ قَوْلِي</Text>
         </View>
 
         <View style={styles.testInfoCard}>
           <Text style={styles.testInfoIcon}>🖇️</Text>
           <Text style={styles.testInfoTitle}>
-            {testType === 'surah' 
-              ? `السورة رقم ${surahNumber}`
-              : `الصفحات ${pageFrom} - ${pageTo}`
-            }
+            {getTestInfo()}
           </Text>
         </View>
 

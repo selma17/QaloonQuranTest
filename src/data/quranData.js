@@ -54,8 +54,34 @@ const groupByPage = (ayahs) => {
   return pages;
 };
 
+const groupByHizb = (ayahs) => {
+  const hizbs = {};
+  
+  ayahs.forEach(ayah => {
+    const hizbNum = ayah.hizb;
+    
+    if (!hizbs[hizbNum]) {
+      hizbs[hizbNum] = [];
+    }
+    
+    hizbs[hizbNum].push({
+      surahNumber: ayah.sura_no,
+      surahName: ayah.sura_name_ar,
+      verseNumber: ayah.aya_no,
+      text: ayah.aya_text,
+      juz: ayah.jozz,
+      page: ayah.page,
+      lineStart: ayah.line_start,
+      lineEnd: ayah.line_end,
+    });
+  });
+  
+  return hizbs;
+};
+
 const surahsData = groupBySurah(qaloonQuran);
 const pagesData = groupByPage(qaloonQuran);
+const hizbsData = groupByHizb(qaloonQuran);
 
 const getRevelationType = (surahNumber) => {
   const medinanSurahs = [2, 3, 4, 5, 8, 9, 22, 24, 33, 47, 48, 49, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 76, 98, 110];
@@ -77,7 +103,6 @@ export const quranData = {
     acc[surah.number] = surah.verses.map(v => v.text);
     return acc;
   }, {}),
-
 
   versesDetailed: surahsData.reduce((acc, surah) => {
     acc[surah.number] = surah.verses;
@@ -169,6 +194,20 @@ export const quranData = {
       ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1)
       : Math.random();
     return shuffled[Math.floor(finalRandomValue * shuffled.length)];
+  },
+
+  getVersesByHizb: (hizbNumber) => {
+    return hizbsData[hizbNumber] || [];
+  },
+
+  getRandomVerseFromHizb: (hizbNumber) => {
+    const verses = hizbsData[hizbNumber];
+    if (!verses || verses.length === 0) return null;
+    const randomValue = typeof crypto !== 'undefined' && crypto.getRandomValues 
+      ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1)
+      : Math.random();
+    const randomIndex = Math.floor(randomValue * verses.length);
+    return verses[randomIndex];
   },
 };
 

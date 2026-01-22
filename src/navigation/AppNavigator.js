@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainScreen from '../screens/MainScreen';
 import SurahSelectionScreen from '../screens/SurahSelectionScreen';
 import PageSelectionScreen from '../screens/PageSelectionScreen';
+import HizbSelectionScreen from '../screens/HizbSelectionScreen';
 import DuaaScreen from '../screens/DuaaScreen';
 import TestScreen from '../screens/TestScreen';
 import ResultsScreen from '../screens/ResultsScreen';
@@ -39,6 +40,12 @@ const AppNavigator = () => {
           name="PageSelection" 
           component={PageSelectionScreen}
           options={{ title: 'اختيار الصفحات' }}
+        />
+
+        <Stack.Screen 
+          name="HizbSelection" 
+          component={HizbSelectionScreen}
+          options={{ title: 'اختيار السورة' }}
         />
         
         <Stack.Screen 

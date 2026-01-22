@@ -63,6 +63,23 @@ const MainScreen = ({ navigation }) => {
               <Text style={styles.arrowText}>←</Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('HizbSelection')}
+            activeOpacity={0.85}>
+            <View style={styles.cardGradient} />
+            <View style={styles.iconContainer}>
+              <Text style={styles.icon}>🗒️</Text>
+            </View>
+            <Text style={styles.cardTitle}>مواضع في حزب معيّن </Text>
+            <Text style={styles.cardDescription}>
+              اختر حزب واختبر حفظك فيه
+            </Text>
+            <View style={styles.cardArrow}>
+              <Text style={styles.arrowText}>←</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.infoSection}>

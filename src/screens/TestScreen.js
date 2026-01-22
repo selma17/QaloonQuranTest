@@ -16,7 +16,7 @@ import quranData from '../data/quranData';
 import { wp, hp, fp, SPACING, FONT_SIZES, RADIUS } from '../utils/responsive';
 
 const TestScreen = ({ navigation, route }) => {
-  const { testType, surahNumber, pageFrom, pageTo } = route.params;
+  const { testType, surahNumber, pageFrom, pageTo, hizbNumber } = route.params;
 
   const [currentVerse, setCurrentVerse] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -25,39 +25,78 @@ const TestScreen = ({ navigation, route }) => {
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [usedVerses, setUsedVerses] = useState(new Set());
 
   const loadRandomVerse = React.useCallback(() => {
-    setLoading(true);
+  setLoading(true);
+  
+  try {
+    let verses = [];
     
-    try {
-      let randomVerse;
-      
-      if (testType === 'surah') {
-        randomVerse = quranData.getRandomVerseFromSurah(surahNumber);
-      } else if (testType === 'pages') {
-        randomVerse = quranData.getRandomVerseFromPageRange(pageFrom, pageTo);
+    // Récupérer tous les versets disponibles
+    if (testType === 'surah') {
+      verses = quranData.versesDetailed[surahNumber] || [];
+    } else if (testType === 'pages') {
+      for (let page = pageFrom; page <= pageTo; page++) {
+        const pageVerses = quranData.getVersesByPage(page) || [];
+        verses.push(...pageVerses);
       }
-
-      if (randomVerse) {
-        setCurrentVerse({
-          surahNumber: randomVerse.surahNumber || surahNumber,
-          surahName: randomVerse.surahName || quranData.getSurahName(surahNumber),
-          verseNumber: randomVerse.number || randomVerse.verseNumber,
-          text: randomVerse.text,
-          page: randomVerse.page,
-          juz: randomVerse.juz,
-        });
-      } else {
-        Alert.alert('خطأ', 'لم يتم العثور على آيات في النطاق المحدد');
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Erreur lors du chargement du verset:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل الآية');
-      setLoading(false);
+    } else if (testType === 'Hizb') {
+      verses = quranData.getVersesByHizb(hizbNumber) || [];
     }
-  }, [testType, surahNumber, pageFrom, pageTo]);
+
+    // Filtrer avec l'état actuel
+    setUsedVerses(currentUsed => {
+      const availableVerses = verses.filter(v => {
+        const verseKey = `${v.surahNumber || surahNumber}-${v.number || v.verseNumber}`;
+        return !currentUsed.has(verseKey);
+      });
+
+      // Si tous vus, réinitialiser
+      let versesToChooseFrom = availableVerses.length > 0 ? availableVerses : verses;
+      let shouldReset = availableVerses.length === 0;
+
+      // Sélection aléatoire
+      const randomValue = typeof crypto !== 'undefined' && crypto.getRandomValues 
+        ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1)
+        : Math.random();
+      
+      const randomIndex = Math.floor(randomValue * versesToChooseFrom.length);
+      const selectedVerse = versesToChooseFrom[randomIndex];
+
+      if (selectedVerse) {
+        const verseKey = `${selectedVerse.surahNumber || surahNumber}-${selectedVerse.number || selectedVerse.verseNumber}`;
+        
+        setCurrentVerse({
+          surahNumber: selectedVerse.surahNumber || surahNumber,
+          surahName: selectedVerse.surahName || quranData.getSurahName(selectedVerse.surahNumber || surahNumber),
+          verseNumber: selectedVerse.number || selectedVerse.verseNumber,
+          text: selectedVerse.text,
+          page: selectedVerse.page,
+          juz: selectedVerse.juz,
+        });
+
+        // Retourner le nouveau Set
+        if (shouldReset) {
+          return new Set([verseKey]);
+        } else {
+          const newSet = new Set(currentUsed);
+          newSet.add(verseKey);
+          return newSet;
+        }
+      } else {
+        Alert.alert('خطأ', 'لم يتم العثور على آيات');
+        return currentUsed;
+      }
+    });
+    
+    setLoading(false);
+  } catch (error) {
+    console.error('Erreur:', error);
+    Alert.alert('خطأ', 'حدث خطأ أثناء تحميل الآية');
+    setLoading(false);
+  }
+}, [testType, surahNumber, pageFrom, pageTo, hizbNumber]);
 
   useEffect(() => {
     loadRandomVerse();
@@ -82,6 +121,7 @@ const TestScreen = ({ navigation, route }) => {
         juz: prevVerse.juz,
       });
     } else {
+      // Logique pour passer à la sourate précédente
       if (testType === 'pages') {
         const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
         const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
@@ -103,6 +143,15 @@ const TestScreen = ({ navigation, route }) => {
           }
         } else {
           Alert.alert('تنبيه', 'هذه هي الآية الأولى في النطاق المحدد');
+        }
+      } else if (testType === 'Hizb') {
+        const hizbVerses = quranData.getVersesByHizb(hizbNumber);
+        if (hizbVerses && hizbVerses.length > 0) {
+          const firstVerse = hizbVerses[0];
+          if (currentVerse.surahNumber === firstVerse.surahNumber && 
+              currentVerse.verseNumber === firstVerse.verseNumber) {
+            Alert.alert('تنبيه', 'هذه هي الآية الأولى في الحزب');
+          }
         }
       } else {
         Alert.alert('تنبيه', 'هذه هي الآية الأولى في السورة');
@@ -129,6 +178,7 @@ const TestScreen = ({ navigation, route }) => {
         juz: nextVerse.juz,
       });
     } else {
+      // Logique pour passer à la sourate suivante
       if (testType === 'pages') {
         const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
         const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
@@ -150,6 +200,15 @@ const TestScreen = ({ navigation, route }) => {
           }
         } else {
           Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في النطاق المحدد');
+        }
+      } else if (testType === 'Hizb') {
+        const hizbVerses = quranData.getVersesByHizb(hizbNumber);
+        if (hizbVerses && hizbVerses.length > 0) {
+          const lastVerse = hizbVerses[hizbVerses.length - 1];
+          if (currentVerse.surahNumber === lastVerse.surahNumber && 
+              currentVerse.verseNumber === lastVerse.verseNumber) {
+            Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في الحزب');
+          }
         }
       } else {
         Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في السورة');
@@ -185,6 +244,7 @@ const TestScreen = ({ navigation, route }) => {
       surahNumber,
       pageFrom,
       pageTo,
+      hizbNumber,
     });
   };
 
@@ -203,7 +263,6 @@ const TestScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       
-      {/* Header - RESPONSIVE */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -215,7 +274,6 @@ const TestScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Score Bar - RESPONSIVE */}
       <View style={styles.scoreBar}>
         <View style={styles.scoreItem}>
           <Text style={styles.scoreValue}>{errors}</Text>
@@ -228,9 +286,7 @@ const TestScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Main Content */}
       <View style={styles.mainContent}>
-        {/* Question Info */}
         <View style={styles.questionInfo}>
           <View style={styles.questionBadge}>
             <Text style={styles.questionNumber}>{questionNumber}</Text>
@@ -243,12 +299,10 @@ const TestScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Bismillah */}
         <View style={styles.bismillahBox}>
           <Text style={styles.bismillah}>﷽</Text>
         </View>
 
-        {/* Verse Card - SCROLLABLE */}
         <View style={styles.verseCard}>
           <View style={styles.verseOrnament} />
           <ScrollView 
@@ -260,7 +314,6 @@ const TestScreen = ({ navigation, route }) => {
           </ScrollView>
           <View style={styles.verseOrnament} />
           
-          {/* Métadonnées */}
           <View style={styles.verseMetadata}>
             <Text style={styles.metadataText}>
               صفحة {currentVerse.page} • جزء {currentVerse.juz}
@@ -269,7 +322,6 @@ const TestScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Control Buttons - FIXED BOTTOM */}
       <View style={styles.controlsContainer}>
         <View style={styles.controlsRow}>
           <TouchableOpacity
@@ -381,7 +433,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   
-  // HEADER
+  
   header: {
     backgroundColor: colors.primary,
     paddingVertical: hp(12),
