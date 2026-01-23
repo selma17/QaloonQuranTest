@@ -10,6 +10,9 @@ import HizbSelectionScreen from '../screens/HizbSelectionScreen';
 import DuaaScreen from '../screens/DuaaScreen';
 import TestScreen from '../screens/TestScreen';
 import ResultsScreen from '../screens/ResultsScreen';
+import CustomResultsScreen from '../screens/CustomResultsScreen';
+import CustomTestScreen from '../screens/CustomTestScreen';
+import CustomTestSetupScreen from '../screens/CustomTestSetupScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -64,6 +67,21 @@ const AppNavigator = () => {
           name="Results" 
           component={ResultsScreen}
           options={{ title: 'النتائج' }}
+        />
+
+        <Stack.Screen 
+          name="CustomTestSetup" 
+          component={CustomTestSetupScreen} 
+        />
+
+        <Stack.Screen 
+          name="CustomTest" 
+          component={CustomTestScreen} 
+        />
+
+        <Stack.Screen 
+          name="CustomResults" 
+          component={CustomResultsScreen} 
         />
         
       </Stack.Navigator>

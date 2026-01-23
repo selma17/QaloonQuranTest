@@ -196,6 +196,8 @@ export const quranData = {
     return shuffled[Math.floor(finalRandomValue * shuffled.length)];
   },
 
+  hizbVerses: hizbsData, 
+
   getVersesByHizb: (hizbNumber) => {
     return hizbsData[hizbNumber] || [];
   },

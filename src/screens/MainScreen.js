@@ -80,6 +80,23 @@ const MainScreen = ({ navigation }) => {
               <Text style={styles.arrowText}>←</Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('CustomTestSetup')}
+            activeOpacity={0.85}>
+            <View style={styles.cardGradient} />
+            <View style={styles.iconContainer}>
+              <Text style={styles.icon}>🗒️</Text>
+            </View>
+            <Text style={styles.cardTitle}>أنشئ اختبارك حسب احتياجاتك </Text>
+            <Text style={styles.cardDescription}>
+              خصّص اختبارك وابدأ التحدّي بطريقتك
+            </Text>
+            <View style={styles.cardArrow}>
+              <Text style={styles.arrowText}>←</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.infoSection}>
