@@ -433,7 +433,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   
-  
   header: {
     backgroundColor: colors.primary,
     paddingVertical: hp(12),
@@ -482,7 +481,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp(10),
     paddingHorizontal: wp(20),
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: colors.secondary,
   },
   scoreItem: {
     flex: 1,
@@ -499,7 +498,7 @@ const styles = StyleSheet.create({
   },
   scoreDivider: {
     width: 1,
-    backgroundColor: colors.border,
+    backgroundColor: colors.secondary,
     marginHorizontal: wp(16),
   },
   

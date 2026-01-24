@@ -14,11 +14,6 @@ import { Picker } from '@react-native-picker/picker';
 import colors from '../styles/colors';
 import quranData from '../data/quranData';
 
-const GREEN = '#2D5F3F';
-const GREEN_LIGHT = '#E8F5E9';
-const GREEN_MEDIUM = '#4A7C59';
-const GOLD = '#D4AF37';
-
 const CustomTestSetupScreen = ({ navigation }) => {
   const [sourceType, setSourceType] = useState('surahs');
   const [selectedSurahs, setSelectedSurahs] = useState([]);
@@ -28,7 +23,6 @@ const CustomTestSetupScreen = ({ navigation }) => {
   const [mode, setMode] = useState('sequential');
   const [versesToRead, setVersesToRead] = useState('3');
 
-  // Current selection for pickers
   const [currentSurah, setCurrentSurah] = useState('');
   const [currentHizb, setCurrentHizb] = useState('');
 
@@ -137,7 +131,7 @@ const CustomTestSetupScreen = ({ navigation }) => {
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>اختبار مخصص</Text>
+          <Text style={styles.headerTitle}>أنشئ اختبارك الخاص </Text>
         </View>
       </View>
 
@@ -146,14 +140,6 @@ const CustomTestSetupScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}>
         
         <View style={styles.content}>
-          {/* Instruction Box */}
-          <View style={styles.instructionBox}>
-            <Text style={styles.instructionText}>
-              قم بتخصيص اختبارك حسب رغبتك
-            </Text>
-          </View>
-
-          {/* 1. Source Type */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>مصدر الأسئلة</Text>
             
@@ -193,7 +179,6 @@ const CustomTestSetupScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Surahs Selection */}
           {sourceType === 'surahs' && (
             <View style={styles.pickerCard}>
               <Text style={styles.label}>اختر السور:</Text>
@@ -245,7 +230,6 @@ const CustomTestSetupScreen = ({ navigation }) => {
             </View>
           )}
 
-          {/* Pages Selection */}
           {sourceType === 'pages' && (
             <View style={styles.pickerCard}>
               <Text style={styles.label}>نطاقات الصفحات:</Text>
@@ -259,7 +243,7 @@ const CustomTestSetupScreen = ({ navigation }) => {
                         keyboardType="numeric"
                         value={range.from}
                         onChangeText={(value) => handlePageRangeChange(index, 'from', value)}
-                        placeholder="1"
+                        placeholder="---"
                         placeholderTextColor={colors.textSecondary}
                       />
                     </View>
@@ -270,7 +254,7 @@ const CustomTestSetupScreen = ({ navigation }) => {
                         keyboardType="numeric"
                         value={range.to}
                         onChangeText={(value) => handlePageRangeChange(index, 'to', value)}
-                        placeholder="604"
+                        placeholder="---"
                         placeholderTextColor={colors.textSecondary}
                       />
                     </View>
@@ -292,7 +276,6 @@ const CustomTestSetupScreen = ({ navigation }) => {
             </View>
           )}
 
-          {/* Hizbs Selection */}
           {sourceType === 'hizbs' && (
             <View style={styles.pickerCard}>
               <Text style={styles.label}>اختر الأحزاب:</Text>
@@ -341,22 +324,19 @@ const CustomTestSetupScreen = ({ navigation }) => {
             </View>
           )}
 
-          {/* 2. Question Count */}
           <View style={styles.pickerCard}>
             <Text style={styles.label}>عدد الأسئلة</Text>
             <TextInput
               style={styles.numberInput}
               keyboardType="numeric"
-              value={questionCount}
               onChangeText={setQuestionCount}
-              placeholder="10"
+              placeholder="--"
               placeholderTextColor={colors.textSecondary}
             />
           </View>
 
-          {/* 3. Mode */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>نمط الأسئلة</Text>
+            <Text style={styles.sectionTitle}> ترتيب الأسئلة</Text>
             <View style={styles.radioGroup}>
               <TouchableOpacity
                 style={[styles.radioButton, mode === 'sequential' && styles.radioButtonActive]}
@@ -382,20 +362,17 @@ const CustomTestSetupScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* 4. Verses to Read */}
           <View style={styles.pickerCard}>
             <Text style={styles.label}>عدد الآيات للقراءة</Text>
             <TextInput
               style={styles.numberInput}
               keyboardType="numeric"
-              value={versesToRead}
               onChangeText={setVersesToRead}
-              placeholder="3"
+              placeholder="--"
               placeholderTextColor={colors.textSecondary}
             />
           </View>
 
-          {/* Start Button */}
           <TouchableOpacity
             style={styles.startButton}
             onPress={validateAndStart}
@@ -440,7 +417,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 25,
-    color: colors.textLight,
+    color: colors.secondary,
     fontWeight: 'bold',
     marginBottom: 20,
   },
@@ -451,7 +428,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textLight,
+    color: colors.secondary,
     marginBottom: 4,
     marginTop: 35,
     marginRight: 15
@@ -460,28 +437,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
-  },
-  instructionBox: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: colors.secondaryLight,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 24,
-    gap: 12,
-  },
-  instructionText: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.textPrimary,
-    textAlign: 'right',
-    fontWeight: '500',
+    padding: 25,
   },
   section: {
     backgroundColor: colors.bgWhite,
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     marginBottom: 20,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 3 },
@@ -495,16 +456,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 10,
     textAlign: 'right',
   },
   radioGroup: {
-    gap: 12,
+    gap: 8,
   },
   radioButton: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    padding: 14,
+    padding: 10,
     borderRadius: 14,
     borderWidth: 2,
     borderColor: colors.borderLight,
@@ -546,7 +507,7 @@ const styles = StyleSheet.create({
   pickerCard: {
     backgroundColor: colors.bgWhite,
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     marginBottom: 20,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 3 },
@@ -560,7 +521,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 10,
     textAlign: 'right',
   },
   pickerWrapper: {
@@ -630,7 +591,7 @@ const styles = StyleSheet.create({
   rangeInputs: {
     flex: 1,
     flexDirection: 'row-reverse',
-    gap: 12,
+    gap: 10,
   },
   inputGroup: {
     flex: 1,
@@ -638,35 +599,36 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginBottom: 6,
+    marginBottom: 1,
     textAlign: 'right',
   },
   input: {
     backgroundColor: colors.bgLight,
     borderRadius: 12,
-    padding: 12,
-    fontSize: 16,
+    padding: 7,
+    fontSize: 15,
     textAlign: 'center',
     borderWidth: 1,
     borderColor: colors.borderLight,
     color: colors.textPrimary,
   },
   removeButton: {
-    width: 40,
-    height: 40,
+    width: 25,
+    height: 25,
     borderRadius: 20,
     backgroundColor: colors.error,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 20,
   },
   removeButtonText: {
-    fontSize: 18,
+    fontSize: 15,
     color: colors.textLight,
     fontWeight: 'bold',
   },
   addButton: {
     backgroundColor: colors.secondary,
-    padding: 14,
+    padding: 10,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 4,
@@ -679,7 +641,7 @@ const styles = StyleSheet.create({
   numberInput: {
     backgroundColor: colors.bgLight,
     borderRadius: 14,
-    padding: 18,
+    padding: 10,
     fontSize: 20,
     textAlign: 'center',
     borderWidth: 1,
@@ -689,7 +651,7 @@ const styles = StyleSheet.create({
   },
   startButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 18,
+    paddingVertical: 15,
     paddingHorizontal: 32,
     borderRadius: 18,
     shadowColor: colors.primary,
@@ -705,7 +667,7 @@ const styles = StyleSheet.create({
   startButtonText: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textLight,
+    color: colors.secondary,
   },
 });
 

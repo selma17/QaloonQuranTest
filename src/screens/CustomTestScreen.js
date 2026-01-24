@@ -15,6 +15,9 @@ import colors from '../styles/colors';
 import quranData from '../data/quranData';
 import { wp, hp, fp, SPACING, FONT_SIZES, RADIUS } from '../utils/responsive';
 
+const GOLD = '#D4AF37';
+const GOLD_LIGHT = '#F4E4C1';
+
 const CustomTestScreen = ({ navigation, route }) => {
   const {
     sourceType,
@@ -29,17 +32,17 @@ const CustomTestScreen = ({ navigation, route }) => {
   const [allQuestions, setAllQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentVerse, setCurrentVerse] = useState(null);
-  const [versesReadCount, setVersesReadCount] = useState(1);
+  const [versesReadCount, setVersesReadCount] = useState(0);
   const [score, setScore] = useState(0);
   const [errors, setErrors] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [currentQuestionAnswered, setCurrentQuestionAnswered] = useState(false);
 
   const timerRef = useRef(null);
 
-  // Chronomètre
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
@@ -52,14 +55,31 @@ const CustomTestScreen = ({ navigation, route }) => {
     };
   }, [startTime]);
 
-  // Formater le temps
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Récupérer tous les versets des sources sélectionnées
+  const hasEnoughFollowingVerses = (verse, allVerses, neededCount) => {
+    const verseIndex = allVerses.findIndex(
+      v => v.surahNumber === verse.surahNumber && v.verseNumber === verse.verseNumber
+    );
+    
+    if (verseIndex === -1) return false;
+    
+    let count = 0;
+    for (let i = verseIndex + 1; i < allVerses.length && count < neededCount; i++) {
+      if (allVerses[i].surahNumber === verse.surahNumber) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    
+    return count >= neededCount;
+  };
+
   const getAllVersesFromSources = () => {
     let allVerses = [];
 
@@ -114,7 +134,6 @@ const CustomTestScreen = ({ navigation, route }) => {
     return allVerses;
   };
 
-  // Générer les questions
   useEffect(() => {
     const generateQuestions = () => {
       const allVerses = getAllVersesFromSources();
@@ -128,7 +147,6 @@ const CustomTestScreen = ({ navigation, route }) => {
       let questions = [];
 
       if (mode === 'sequential') {
-        // Mode séquentiel : trier puis sélectionner des points de départ aléatoires
         allVerses.sort((a, b) => {
           if (a.surahNumber !== b.surahNumber) {
             return a.surahNumber - b.surahNumber;
@@ -136,27 +154,40 @@ const CustomTestScreen = ({ navigation, route }) => {
           return a.verseNumber - b.verseNumber;
         });
 
-        // Sélectionner N points de départ aléatoires, mais triés
-        const possibleStarts = [];
-        for (let i = 0; i < allVerses.length - versesToRead + 1; i++) {
-          possibleStarts.push(i);
+        const validStartPoints = [];
+        for (let i = 0; i < allVerses.length; i++) {
+          if (hasEnoughFollowingVerses(allVerses[i], allVerses, versesToRead)) {
+            validStartPoints.push(i);
+          }
         }
 
-        // Shuffle les indices
-        const shuffled = [...possibleStarts];
+        if (validStartPoints.length === 0) {
+          Alert.alert('خطأ', 'لا توجد آيات كافية لإنشاء الاختبار بهذه المعايير');
+          navigation.goBack();
+          return;
+        }
+
+        const shuffled = [...validStartPoints];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
 
-        // Prendre les N premiers et les trier
         const selectedIndices = shuffled.slice(0, Math.min(questionCount, shuffled.length)).sort((a, b) => a - b);
-
         questions = selectedIndices.map(index => allVerses[index]);
 
       } else {
-        // Mode random : complètement aléatoire
-        const shuffled = [...allVerses];
+        const validVerses = allVerses.filter(verse => 
+          hasEnoughFollowingVerses(verse, allVerses, versesToRead)
+        );
+
+        if (validVerses.length === 0) {
+          Alert.alert('خطأ', 'لا توجد آيات كافية لإنشاء الاختبار بهذه المعايير');
+          navigation.goBack();
+          return;
+        }
+
+        const shuffled = [...validVerses];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -182,7 +213,6 @@ const CustomTestScreen = ({ navigation, route }) => {
       return;
     }
 
-    // Trouver le verset suivant dans la même sourate
     const verses = quranData.versesDetailed[currentVerse.surahNumber];
     if (!verses) return;
 
@@ -205,40 +235,24 @@ const CustomTestScreen = ({ navigation, route }) => {
   };
 
   const handleNextQuestion = () => {
-    if (versesReadCount < versesToRead) {
-      Alert.alert('تنبيه', `يجب قراءة ${versesToRead} آيات قبل الانتقال للسؤال التالي`);
-      return;
+    if (!currentQuestionAnswered) {
+      const isCompleted = versesReadCount >= versesToRead;
+
+      if (isCompleted) {
+        setScore(score + 1);
+      } else {
+        setErrors(errors + 1);
+      }
+      
+      setCurrentQuestionAnswered(true);
     }
 
-    // Marquer comme réponse صحيحة
-    setScore(score + 1);
-
-    // Passer à la question suivante
     if (currentQuestionIndex < allQuestions.length - 1) {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
       setCurrentVerse(allQuestions[nextIndex]);
-      setVersesReadCount(1);
-    } else {
-      // Fin du test
-      handleFinishTest();
-    }
-  };
-
-  const handleSkipQuestion = () => {
-    // Compter comme erreur si pas terminé
-    if (versesReadCount < versesToRead) {
-      setErrors(errors + 1);
-    } else {
-      setScore(score + 1);
-    }
-
-    // Passer à la question suivante
-    if (currentQuestionIndex < allQuestions.length - 1) {
-      const nextIndex = currentQuestionIndex + 1;
-      setCurrentQuestionIndex(nextIndex);
-      setCurrentVerse(allQuestions[nextIndex]);
-      setVersesReadCount(1);
+      setVersesReadCount(0);
+      setCurrentQuestionAnswered(false);
     } else {
       handleFinishTest();
     }
@@ -249,9 +263,24 @@ const CustomTestScreen = ({ navigation, route }) => {
       clearInterval(timerRef.current);
     }
 
+    let finalScore = score;
+    let finalErrors = errors;
+    
+    if (!currentQuestionAnswered) {
+      const isCompleted = versesReadCount >= versesToRead;
+      if (isCompleted) {
+        finalScore += 1;
+      } else {
+        finalErrors += 1;
+      }
+    }
+
+    const questionsAnswered = currentQuestionIndex + 1;
+    const remainingQuestions = allQuestions.length - questionsAnswered;
+
     navigation.navigate('CustomResults', {
-      score,
-      errors,
+      score: finalScore,
+      errors: finalErrors + remainingQuestions,
       totalQuestions: allQuestions.length,
       duration: elapsedTime,
       sourceType,
@@ -263,7 +292,7 @@ const CustomTestScreen = ({ navigation, route }) => {
     });
   };
 
-  const handleQuit = () => {
+  const handleQuitConfirm = () => {
     setShowQuitModal(false);
     handleFinishTest();
   };
@@ -280,6 +309,14 @@ const CustomTestScreen = ({ navigation, route }) => {
   }
 
   const canGoToNextQuestion = versesReadCount >= versesToRead;
+  const isLastQuestion = currentQuestionIndex === allQuestions.length - 1;
+
+  const getMainButtonText = () => {
+    if (isLastQuestion) {
+      return canGoToNextQuestion ? 'إنهاء الاختبار ✓' : 'إنهاء الاختبار (خطأ)';
+    }
+    return canGoToNextQuestion ? 'السؤال التالي ✓' : 'السؤال التالي (خطأ)';
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -322,86 +359,78 @@ const CustomTestScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Compteur de versets */}
-        <View style={styles.verseCounter}>
-          <Text style={styles.verseCounterText}>
-            آية {versesReadCount} / {versesToRead}
-          </Text>
-          {canGoToNextQuestion && (
-            <View style={styles.completeBadge}>
-              <Text style={styles.completeText}>✓ مكتمل</Text>
-            </View>
-          )}
-        </View>
+        {/* ✅ Nouvelle version compacte du compteur */}
+        
 
         <View style={styles.bismillahBox}>
           <Text style={styles.bismillah}>﷽</Text>
         </View>
 
-        <View style={styles.verseCard}>
-          <View style={styles.verseOrnament} />
-          <ScrollView
-            style={styles.verseScrollView}
-            contentContainerStyle={styles.verseScrollContent}
-            showsVerticalScrollIndicator={true}
-            persistentScrollbar={true}>
-            <Text style={styles.verseText}>{currentVerse.text}</Text>
-          </ScrollView>
-          <View style={styles.verseOrnament} />
+        {/* ✅ Carte de verset centrée */}
+        <View style={styles.verseCardContainer}>
+          <View style={styles.verseCard}>
+            <View style={styles.verseOrnament} />
+            <ScrollView
+              style={styles.verseScrollView}
+              contentContainerStyle={styles.verseScrollContent}
+              showsVerticalScrollIndicator={true}
+              persistentScrollbar={true}>
+              <Text style={styles.verseText}>{currentVerse.text}</Text>
+            </ScrollView>
+            <View style={styles.verseOrnament} />
 
-          <View style={styles.verseMetadata}>
-            <Text style={styles.metadataText}>
-              صفحة {currentVerse.page} • جزء {currentVerse.juz}
-            </Text>
+            <View style={styles.verseMetadata}>
+              <Text style={styles.metadataText}>
+                صفحة {currentVerse.page} • جزء {currentVerse.juz}
+              </Text>
+            </View>
           </View>
+        </View>
+        <View style={styles.progressBar}>
+          <Text style={styles.progressText}>
+            {Math.min(versesReadCount, versesToRead)}/{versesToRead}
+            {canGoToNextQuestion && ' ✓'}
+          </Text>
         </View>
       </View>
 
+      {/* ✅ Boutons avec hauteur réduite et espaces égaux */}
       <View style={styles.controlsContainer}>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={handleNextVerse}
-          activeOpacity={0.8}
-          disabled={versesReadCount >= versesToRead}>
-          <Text style={[
-            styles.controlButtonText,
-            versesReadCount >= versesToRead && styles.controlButtonTextDisabled
-          ]}>
-            الآية التالية
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.controlsRow}>
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handleNextVerse}
+            activeOpacity={0.8}
+            disabled={versesReadCount >= versesToRead}>
+            <Text style={[
+              styles.controlButtonText,
+              versesReadCount >= versesToRead && styles.controlButtonTextDisabled
+            ]}>
+              الآية التالية
+            </Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[
+                styles.mainButton,
+                canGoToNextQuestion ? styles.mainButtonSuccess : styles.mainButtonError
+            ]}
+            onPress={handleNextQuestion}
+            activeOpacity={0.85}>
+            <Text style={styles.mainButtonText}>
+                {getMainButtonText()}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
         <TouchableOpacity
-          style={[
-            styles.nextQuestionButton,
-            !canGoToNextQuestion && styles.nextQuestionButtonDisabled
-          ]}
-          onPress={handleNextQuestion}
-          activeOpacity={0.85}
-          disabled={!canGoToNextQuestion}>
-          <Text style={styles.nextQuestionButtonText}>
-            {currentQuestionIndex < allQuestions.length - 1 ? 'السؤال التالي' : 'إنهاء الاختبار'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={handleSkipQuestion}
-          activeOpacity={0.8}>
-          <Text style={styles.skipButtonText}>
-            سؤال جديد {versesReadCount < versesToRead && '(خطأ)'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.quitButton}
-          onPress={() => setShowQuitModal(true)}
-          activeOpacity={0.8}>
-          <Text style={styles.quitButtonText}>إنهاء الاختبار</Text>
+            style={styles.quitButton}
+            onPress={() => setShowQuitModal(true)}
+            activeOpacity={0.8}>
+            <Text style={styles.quitButtonText}>إنهاء</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal: Quit Confirmation */}
       <Modal
         visible={showQuitModal}
         transparent
@@ -411,7 +440,7 @@ const CustomTestScreen = ({ navigation, route }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>تأكيد الخروج</Text>
             <Text style={styles.modalText}>
-              هل تريد إنهاء الاختبار؟
+              هل تريد إنهاء الاختبار؟ سيتم احتساب الأسئلة المتبقية كأخطاء.
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -422,7 +451,7 @@ const CustomTestScreen = ({ navigation, route }) => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={handleQuit}
+                onPress={handleQuitConfirm}
                 activeOpacity={0.85}>
                 <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>
                   إنهاء
@@ -458,9 +487,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(16),
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: GOLD,
     shadowOffset: { width: 0, height: hp(2) },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: wp(4),
     elevation: 3,
     borderBottomLeftRadius: RADIUS.xl,
@@ -475,6 +504,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: wp(10),
     marginTop: hp(15),
+    borderWidth: 1,
+    borderColor: GOLD_LIGHT,
   },
   backButtonText: {
     fontSize: fp(18),
@@ -487,7 +518,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.textLight,
     marginTop: hp(25),
     marginRight: wp(15),
@@ -496,16 +527,15 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
     color: 'rgba(255, 255, 255, 0.9)',
     marginRight: wp(15),
-    marginTop: hp(4),
   },
 
   scoreBar: {
     backgroundColor: colors.bgWhite,
     flexDirection: 'row-reverse',
-    paddingVertical: hp(10),
+    paddingVertical: hp(8),
     paddingHorizontal: wp(20),
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: GOLD_LIGHT,
   },
   scoreItem: {
     flex: 1,
@@ -522,26 +552,29 @@ const styles = StyleSheet.create({
   },
   scoreDivider: {
     width: 1,
-    backgroundColor: colors.border,
+    backgroundColor: GOLD,
     marginHorizontal: wp(16),
   },
 
   mainContent: {
     flex: 1,
-    padding: SPACING.md,
+    padding: SPACING.sm,
   },
 
   questionInfo: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    marginBottom: hp(12),
+    marginBottom: hp(8),
     gap: wp(10),
   },
   questionBadge: {
     paddingHorizontal: wp(12),
     paddingVertical: hp(6),
     borderRadius: wp(20),
-    backgroundColor: colors.secondary,
+    backgroundColor: GOLD,
+    borderWidth: 1,
+    borderColor: GOLD,
+    marginRight: 10,
   },
   questionNumber: {
     fontSize: FONT_SIZES.md,
@@ -562,39 +595,33 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 
-  verseCounter: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.secondaryLight,
-    padding: hp(12),
+  // ✅ Nouveau style compact pour le compteur de progression
+  progressBar: {
+    backgroundColor: colors.bgWhite,
+    paddingVertical: hp(6),
+    paddingHorizontal: wp(12),
     borderRadius: RADIUS.md,
-    marginBottom: hp(12),
+    marginBottom: hp(8),
+    borderWidth: 1,
+    borderColor: GOLD_LIGHT,
+    alignSelf: 'center',
   },
-  verseCounterText: {
+  progressText: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
     color: colors.primary,
-  },
-  completeBadge: {
-    backgroundColor: colors.success,
-    paddingHorizontal: wp(12),
-    paddingVertical: hp(4),
-    borderRadius: RADIUS.sm,
-  },
-  completeText: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: colors.textLight,
+    textAlign: 'center',
   },
 
   bismillahBox: {
     backgroundColor: colors.bgWhite,
-    padding: hp(12),
+    padding: hp(8),
     borderRadius: RADIUS.md,
-    marginBottom: hp(12),
+    marginBottom: hp(8),
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: GOLD_LIGHT,
+    marginRight: 10,
+    marginLeft: 10,
   },
   bismillah: {
     fontSize: FONT_SIZES.lg,
@@ -603,33 +630,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  // ✅ Container pour centrer la carte
+  verseCardContainer: {
+    flex: 1,
+    marginRight: 10,
+    marginLeft: 10,
+  },
   verseCard: {
     flex: 1,
     backgroundColor: colors.bgWhite,
     borderRadius: RADIUS.xl,
-    paddingVertical: hp(16),
-    paddingHorizontal: wp(20),
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: hp(4) },
-    shadowOpacity: 0.1,
-    shadowRadius: wp(8),
+    paddingVertical: hp(12),
+    paddingHorizontal: wp(16),
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: hp(3) },
+    shadowOpacity: 0.15,
+    shadowRadius: wp(6),
     elevation: 4,
     borderWidth: 2,
     borderColor: colors.secondary,
+    marginBottom: 20,
   },
   verseOrnament: {
     width: wp(50),
     height: 2,
-    backgroundColor: colors.secondary,
+    backgroundColor: GOLD,
     alignSelf: 'center',
     borderRadius: 1,
-    marginVertical: hp(8),
+    marginVertical: hp(6),
   },
   verseScrollView: {
     flex: 1,
   },
   verseScrollContent: {
-    paddingVertical: hp(8),
+    paddingVertical: hp(6),
   },
   verseText: {
     fontSize: FONT_SIZES.verse,
@@ -639,10 +673,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   verseMetadata: {
-    marginTop: hp(8),
-    paddingTop: hp(8),
+    marginTop: hp(6),
+    paddingTop: hp(6),
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: GOLD_LIGHT,
   },
   metadataText: {
     fontSize: FONT_SIZES.caption,
@@ -650,19 +684,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // ✅ Styles améliorés pour les boutons
   controlsContainer: {
     backgroundColor: colors.bgWhite,
-    padding: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
-    gap: hp(10),
+    padding: SPACING.sm,
+    borderTopWidth: 2,
+    borderTopColor: GOLD_LIGHT,
+    gap: hp(8),
+    padding: 15,
+    height: 160,
+  },
+  controlsRow: {
+    flexDirection: 'row-reverse',
+    gap: wp(10),
   },
   controlButton: {
+    flex: 1,
     backgroundColor: colors.bgLight,
-    paddingVertical: hp(12),
+    paddingVertical: hp(12), 
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: GOLD_LIGHT,
+    justifyContent: 'center',
   },
   controlButtonText: {
     fontSize: FONT_SIZES.sm,
@@ -673,49 +716,39 @@ const styles = StyleSheet.create({
   controlButtonTextDisabled: {
     color: colors.textSecondary,
   },
-  nextQuestionButton: {
-    backgroundColor: colors.success,
-    paddingVertical: hp(14),
-    borderRadius: RADIUS.lg,
-    shadowColor: colors.success,
-    shadowOffset: { width: 0, height: hp(2) },
-    shadowOpacity: 0.25,
-    shadowRadius: wp(4),
-    elevation: 3,
-  },
-  nextQuestionButtonDisabled: {
-    backgroundColor: colors.textSecondary,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  nextQuestionButtonText: {
-    fontSize: FONT_SIZES.buttonText,
-    fontWeight: '700',
-    color: colors.textLight,
-    textAlign: 'center',
-  },
-  skipButton: {
-    backgroundColor: colors.secondary,
-    paddingVertical: hp(12),
-    borderRadius: RADIUS.md,
-  },
-  skipButtonText: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: colors.textLight,
-    textAlign: 'center',
-  },
   quitButton: {
     backgroundColor: colors.bgLight,
-    paddingVertical: hp(12),
+    paddingVertical: hp(12), 
     borderRadius: RADIUS.md,
     borderWidth: 2,
     borderColor: colors.error,
   },
   quitButtonText: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     color: colors.error,
+    textAlign: 'center',
+  },
+
+  mainButton: {
+    flex: 1, 
+    paddingVertical: hp(12), 
+    borderRadius: RADIUS.lg,
+    justifyContent: 'center',
+    borderColor: colors.primary, 
+  },
+  mainButtonSuccess: {
+    backgroundColor: colors.success,
+    shadowColor: colors.success,
+  },
+  mainButtonError: {
+    backgroundColor: GOLD_LIGHT,
+    shadowColor: colors.secondary,
+  },
+  mainButtonText: {
+    fontSize: FONT_SIZES.buttonText,
+    fontWeight: '700',
+    color: colors.textLight,
     textAlign: 'center',
   },
 
@@ -737,6 +770,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: wp(12),
     elevation: 10,
+    borderTopWidth: 3,
+    borderTopColor: GOLD,
   },
   modalTitle: {
     fontSize: FONT_SIZES.xl,
