@@ -16,8 +16,21 @@ import quranData from '../data/quranData';
 import { wp, hp, fp, SPACING, FONT_SIZES, RADIUS } from '../utils/responsive';
 
 const TestScreen = ({ navigation, route }) => {
-  const { testType, surahNumber, pageFrom, pageTo, hizbNumber } = route.params;
+  const { 
+    testType, 
+    surahNumber, 
+    pageFrom, 
+    pageTo, 
+    hizbNumber,
+    questionCount,
+    selectionMode
+  } = route.params;
 
+  // Déterminer si on a un nombre de questions défini dès le départ
+  const hasDefinedQuestionCount = questionCount && questionCount > 0;
+
+  const [allQuestions, setAllQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentVerse, setCurrentVerse] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
   const [score, setScore] = useState(0);
@@ -27,80 +40,221 @@ const TestScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [usedVerses, setUsedVerses] = useState(new Set());
 
-  const loadRandomVerse = React.useCallback(() => {
-  setLoading(true);
-  
-  try {
-    let verses = [];
-    
-    // Récupérer tous les versets disponibles
-    if (testType === 'surah') {
-      verses = quranData.versesDetailed[surahNumber] || [];
-    } else if (testType === 'pages') {
-      for (let page = pageFrom; page <= pageTo; page++) {
-        const pageVerses = quranData.getVersesByPage(page) || [];
-        verses.push(...pageVerses);
-      }
-    } else if (testType === 'Hizb') {
-      verses = quranData.getVersesByHizb(hizbNumber) || [];
-    }
-
-    // Filtrer avec l'état actuel
-    setUsedVerses(currentUsed => {
-      const availableVerses = verses.filter(v => {
-        const verseKey = `${v.surahNumber || surahNumber}-${v.number || v.verseNumber}`;
-        return !currentUsed.has(verseKey);
-      });
-
-      // Si tous vus, réinitialiser
-      let versesToChooseFrom = availableVerses.length > 0 ? availableVerses : verses;
-      let shouldReset = availableVerses.length === 0;
-
-      // Sélection aléatoire
-      const randomValue = typeof crypto !== 'undefined' && crypto.getRandomValues 
-        ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1)
-        : Math.random();
-      
-      const randomIndex = Math.floor(randomValue * versesToChooseFrom.length);
-      const selectedVerse = versesToChooseFrom[randomIndex];
-
-      if (selectedVerse) {
-        const verseKey = `${selectedVerse.surahNumber || surahNumber}-${selectedVerse.number || selectedVerse.verseNumber}`;
+  // Générer les questions au chargement
+  useEffect(() => {
+    const generateQuestions = () => {
+      try {
+        let allVerses = [];
         
-        setCurrentVerse({
-          surahNumber: selectedVerse.surahNumber || surahNumber,
-          surahName: selectedVerse.surahName || quranData.getSurahName(selectedVerse.surahNumber || surahNumber),
-          verseNumber: selectedVerse.number || selectedVerse.verseNumber,
-          text: selectedVerse.text,
-          page: selectedVerse.page,
-          juz: selectedVerse.juz,
+        // Récupérer tous les versets selon le type de test
+        if (testType === 'surah') {
+          const surahVerses = quranData.versesDetailed[surahNumber] || [];
+          allVerses = surahVerses.map(v => ({
+            surahNumber: surahNumber,
+            surahName: quranData.getSurahName(surahNumber),
+            verseNumber: v.number,
+            text: v.text,
+            page: v.page,
+            juz: v.juz,
+          }));
+        } else if (testType === 'pages') {
+          for (let page = pageFrom; page <= pageTo; page++) {
+            const pageVerses = quranData.getVersesByPage(page) || [];
+            pageVerses.forEach(v => {
+              allVerses.push({
+                surahNumber: v.surahNumber,
+                surahName: v.surahName,
+                verseNumber: v.verseNumber,
+                text: v.text,
+                page: v.page || page,
+                juz: v.juz,
+              });
+            });
+          }
+        } else if (testType === 'Hizb') {
+          const hizbVerses = quranData.getVersesByHizb(hizbNumber) || [];
+          hizbVerses.forEach(v => {
+            allVerses.push({
+              surahNumber: v.surahNumber,
+              surahName: v.surahName,
+              verseNumber: v.verseNumber,
+              text: v.text,
+              page: v.page,
+              juz: v.juz,
+            });
+          });
+        }
+
+        if (allVerses.length === 0) {
+          Alert.alert('خطأ', 'لم يتم العثور على آيات');
+          navigation.goBack();
+          return;
+        }
+
+        let questions = [];
+
+        // Si un nombre de questions est défini
+        if (hasDefinedQuestionCount) {
+          if (selectionMode === 'sequential') {
+            // Mode séquentiel : Division en blocs
+            // Exemple : 200 versets, 5 questions → 5 blocs de 40 versets
+            // Chaque bloc donne 1 question aléatoire
+            
+            // Trier tous les versets
+            allVerses.sort((a, b) => {
+              if (a.surahNumber !== b.surahNumber) {
+                return a.surahNumber - b.surahNumber;
+              }
+              return a.verseNumber - b.verseNumber;
+            });
+
+            const numQuestions = Math.min(questionCount, allVerses.length);
+            const blockSize = Math.floor(allVerses.length / numQuestions);
+            
+            questions = [];
+            
+            for (let i = 0; i < numQuestions; i++) {
+              const blockStart = i * blockSize;
+              const blockEnd = (i === numQuestions - 1) 
+                ? allVerses.length  // Dernier bloc prend tous les versets restants
+                : (i + 1) * blockSize;
+              
+              // Choisir un verset aléatoire dans ce bloc
+              const randomIndexInBlock = blockStart + Math.floor(Math.random() * (blockEnd - blockStart));
+              
+              if (randomIndexInBlock < allVerses.length) {
+                questions.push(allVerses[randomIndexInBlock]);
+              }
+            }
+
+          } else {
+            // Mode aléatoire : mélanger et prendre les N premiers
+            const shuffled = [...allVerses];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            questions = shuffled.slice(0, Math.min(questionCount, shuffled.length));
+          }
+
+          setAllQuestions(questions);
+          if (questions.length > 0) {
+            setCurrentVerse(questions[0]);
+          }
+        } else {
+          // Mode infini : pas de limite de questions, charger le premier verset
+          setAllQuestions(allVerses);
+          
+          // En mode infini, charger un verset aléatoire
+          if (allVerses.length > 0) {
+            const randomIndex = Math.floor(Math.random() * allVerses.length);
+            setCurrentVerse(allVerses[randomIndex]);
+            setUsedVerses(new Set([`${allVerses[randomIndex].surahNumber}-${allVerses[randomIndex].verseNumber}`]));
+          }
+        }
+
+        setLoading(false);
+      } catch (error) {
+        Alert.alert('خطأ', 'حدث خطأ أثناء تحميل الأسئلة');
+        setLoading(false);
+      }
+    };
+
+    generateQuestions();
+  }, [testType, surahNumber, pageFrom, pageTo, hizbNumber, questionCount, selectionMode]);
+
+  // Charger un verset aléatoire (mode infini uniquement)
+  const loadRandomVerse = React.useCallback(() => {
+    if (hasDefinedQuestionCount) return; // Ne pas utiliser en mode avec limite
+
+    setLoading(true);
+    
+    try {
+      let verses = [];
+      
+      // Récupérer tous les versets selon le type de test
+      if (testType === 'surah') {
+        const surahVerses = quranData.versesDetailed[surahNumber] || [];
+        verses = surahVerses.map(v => ({
+          surahNumber: surahNumber,
+          surahName: quranData.getSurahName(surahNumber),
+          verseNumber: v.number,
+          text: v.text,
+          page: v.page,
+          juz: v.juz,
+        }));
+      } else if (testType === 'pages') {
+        for (let page = pageFrom; page <= pageTo; page++) {
+          const pageVerses = quranData.getVersesByPage(page) || [];
+          pageVerses.forEach(v => {
+            verses.push({
+              surahNumber: v.surahNumber,
+              surahName: v.surahName,
+              verseNumber: v.verseNumber,
+              text: v.text,
+              page: v.page || page,
+              juz: v.juz,
+            });
+          });
+        }
+      } else if (testType === 'Hizb') {
+        const hizbVerses = quranData.getVersesByHizb(hizbNumber) || [];
+        hizbVerses.forEach(v => {
+          verses.push({
+            surahNumber: v.surahNumber,
+            surahName: v.surahName,
+            verseNumber: v.verseNumber,
+            text: v.text,
+            page: v.page,
+            juz: v.juz,
+          });
+        });
+      }
+
+      // Filtrer avec l'état actuel
+      setUsedVerses(currentUsed => {
+        const availableVerses = verses.filter(v => {
+          const verseKey = `${v.surahNumber}-${v.verseNumber}`;
+          return !currentUsed.has(verseKey);
         });
 
-        // Retourner le nouveau Set
-        if (shouldReset) {
-          return new Set([verseKey]);
-        } else {
-          const newSet = new Set(currentUsed);
-          newSet.add(verseKey);
-          return newSet;
-        }
-      } else {
-        Alert.alert('خطأ', 'لم يتم العثور على آيات');
-        return currentUsed;
-      }
-    });
-    
-    setLoading(false);
-  } catch (error) {
-    console.error('Erreur:', error);
-    Alert.alert('خطأ', 'حدث خطأ أثناء تحميل الآية');
-    setLoading(false);
-  }
-}, [testType, surahNumber, pageFrom, pageTo, hizbNumber]);
+        // Si tous vus, réinitialiser
+        let versesToChooseFrom = availableVerses.length > 0 ? availableVerses : verses;
+        let shouldReset = availableVerses.length === 0;
 
-  useEffect(() => {
-    loadRandomVerse();
-  }, [loadRandomVerse]);
+        // Sélection aléatoire
+        const randomValue = typeof crypto !== 'undefined' && crypto.getRandomValues 
+          ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1)
+          : Math.random();
+        
+        const randomIndex = Math.floor(randomValue * versesToChooseFrom.length);
+        const selectedVerse = versesToChooseFrom[randomIndex];
+
+        if (selectedVerse) {
+          const verseKey = `${selectedVerse.surahNumber}-${selectedVerse.verseNumber}`;
+          
+          setCurrentVerse(selectedVerse);
+
+          // Retourner le nouveau Set
+          if (shouldReset) {
+            return new Set([verseKey]);
+          } else {
+            const newSet = new Set(currentUsed);
+            newSet.add(verseKey);
+            return newSet;
+          }
+        } else {
+          Alert.alert('خطأ', 'لم يتم العثور على آيات');
+          return currentUsed;
+        }
+      });
+      
+      setLoading(false);
+    } catch (error) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل الآية');
+      setLoading(false);
+    }
+  }, [testType, surahNumber, pageFrom, pageTo, hizbNumber, hasDefinedQuestionCount]);
 
   const handlePreviousVerse = () => {
     if (!currentVerse) return;
@@ -228,24 +382,83 @@ const TestScreen = ({ navigation, route }) => {
     } else {
       setErrors(errors + 1);
     }
-    
-    setQuestionNumber(questionNumber + 1);
-    loadRandomVerse();
+
+    // Si nombre de questions défini
+    if (hasDefinedQuestionCount) {
+      if (currentQuestionIndex < allQuestions.length - 1) {
+        // Passer à la question suivante
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        setCurrentVerse(allQuestions[nextIndex]);
+        setQuestionNumber(questionNumber + 1);
+      } else {
+        // C'était la dernière question → Fin du test automatique
+        setTimeout(() => {
+          handleFinishTest(isCorrect);
+        }, 300); // Petit délai pour que l'utilisateur voie la transition
+      }
+    } else {
+      // Mode infini : charger un nouveau verset aléatoire
+      setQuestionNumber(questionNumber + 1);
+      loadRandomVerse();
+    }
   };
 
-  const handleQuit = () => {
-    setShowQuitModal(false);
+  const handleFinishTest = (lastAnswerWasCorrect = null) => {
+    // Calculer le score final en tenant compte de la dernière réponse si nécessaire
+    let finalScore = score;
+    let finalErrors = errors;
+    
+    if (lastAnswerWasCorrect !== null) {
+      if (lastAnswerWasCorrect) {
+        finalScore = score + 1;
+      } else {
+        finalErrors = errors + 1;
+      }
+    }
     
     navigation.navigate('Results', {
-      score,
-      errors,
-      totalQuestions: questionNumber - 1,
+      score: finalScore,
+      errors: finalErrors,
+      totalQuestions: hasDefinedQuestionCount ? allQuestions.length : questionNumber - 1,
       testType,
       surahNumber,
       pageFrom,
       pageTo,
       hizbNumber,
     });
+  };
+
+  const handleQuit = () => {
+    setShowQuitModal(false);
+    
+    if (hasDefinedQuestionCount) {
+      // Compter les questions restantes comme erreurs
+      const questionsAnswered = currentQuestionIndex + 1;
+      const remainingQuestions = allQuestions.length - questionsAnswered;
+      
+      navigation.navigate('Results', {
+        score,
+        errors: errors + remainingQuestions,
+        totalQuestions: allQuestions.length,
+        testType,
+        surahNumber,
+        pageFrom,
+        pageTo,
+        hizbNumber,
+      });
+    } else {
+      navigation.navigate('Results', {
+        score,
+        errors,
+        totalQuestions: questionNumber - 1,
+        testType,
+        surahNumber,
+        pageFrom,
+        pageTo,
+        hizbNumber,
+      });
+    }
   };
 
   if (loading || !currentVerse) {
@@ -284,77 +497,96 @@ const TestScreen = ({ navigation, route }) => {
           <Text style={styles.scoreValue}>{score}</Text>
           <Text style={styles.scoreLabel}>✓</Text>
         </View>
+        <View style={styles.scoreDivider} />
+        <View style={styles.scoreItem}>
+          <Text style={styles.scoreValue}>
+            {hasDefinedQuestionCount 
+              ? `${currentQuestionIndex + 1}/${allQuestions.length}`
+              : questionNumber
+            }
+          </Text>
+          <Text style={styles.scoreLabel}>السؤال</Text>
+        </View>
       </View>
 
-      <View style={styles.mainContent}>
+      <ScrollView style={styles.mainContent}>
         <View style={styles.questionInfo}>
           <View style={styles.questionBadge}>
-            <Text style={styles.questionNumber}>{questionNumber}</Text>
+            <Text style={styles.questionNumber}>
+              {hasDefinedQuestionCount ? currentQuestionIndex + 1 : questionNumber}
+            </Text>
           </View>
           <View style={styles.questionTextContainer}>
-            <Text style={styles.surahName}>سورة {currentVerse.surahName}</Text>
-            <Text style={styles.instructionText}>
-              اقرأ من قوله تعالى (آية {currentVerse.verseNumber}):
-            </Text>
+            <Text style={styles.surahName}>{currentVerse.surahName}</Text>
+            <Text style={styles.instructionText}>ما هي الآية التالية؟</Text>
           </View>
         </View>
 
-        <View style={styles.bismillahBox}>
-          <Text style={styles.bismillah}>﷽</Text>
-        </View>
+        {currentVerse.verseNumber === 1 && currentVerse.surahNumber !== 1 && currentVerse.surahNumber !== 9 && (
+          <View style={styles.bismillahBox}>
+            <Text style={styles.bismillah}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+          </View>
+        )}
 
         <View style={styles.verseCard}>
           <View style={styles.verseOrnament} />
           <ScrollView 
             style={styles.verseScrollView}
             contentContainerStyle={styles.verseScrollContent}
-            showsVerticalScrollIndicator={true}
-            persistentScrollbar={true}>
+            showsVerticalScrollIndicator={false}>
             <Text style={styles.verseText}>{currentVerse.text}</Text>
           </ScrollView>
           <View style={styles.verseOrnament} />
-          
           <View style={styles.verseMetadata}>
             <Text style={styles.metadataText}>
-              صفحة {currentVerse.page} • جزء {currentVerse.juz}
+              الآية {currentVerse.verseNumber} • الصفحة {currentVerse.page} • الجزء {currentVerse.juz}
             </Text>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.controlsContainer}>
         <View style={styles.controlsRow}>
-          <TouchableOpacity
+          <TouchableOpacity 
             style={styles.controlButton}
-            onPress={handlePreviousVerse}
-            activeOpacity={0.8}>
-            <Text style={styles.controlButtonText}>السابقة</Text>
+            onPress={handlePreviousVerse}>
+            <Text style={styles.controlButtonText}>← الآية السابقة</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
+          <TouchableOpacity 
             style={styles.controlButton}
-            onPress={handleNextVerse}
-            activeOpacity={0.8}>
-            <Text style={styles.controlButtonText}>التالية</Text>
+            onPress={handleNextVerse}>
+            <Text style={styles.controlButtonText}>الآية التالية →</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
+        
+        {hasDefinedQuestionCount && currentQuestionIndex === allQuestions.length - 1 ? (
+          // Dernière question : afficher un message au lieu du bouton
+          <View style={styles.lastQuestionInfo}>
+            <Text style={styles.lastQuestionText}>
+              هذا هو السؤال الأخير! سيتم عرض النتائج بعد الإجابة.
+            </Text>
+          </View>
+        ) : null}
+        
+        <TouchableOpacity 
           style={styles.newQuestionButton}
-          onPress={handleNewQuestion}
-          activeOpacity={0.85}>
-          <Text style={styles.newQuestionButtonText}>سؤال جديد</Text>
+          onPress={handleNewQuestion}>
+          <Text style={styles.newQuestionButtonText}>
+            {hasDefinedQuestionCount && currentQuestionIndex === allQuestions.length - 1 
+              ? 'إنهاء الاختبار' 
+              : 'سؤال جديد'
+            }
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        <TouchableOpacity 
           style={styles.quitButton}
-          onPress={() => setShowQuitModal(true)}
-          activeOpacity={0.8}>
-          <Text style={styles.quitButtonText}>إنهاء</Text>
+          onPress={() => setShowQuitModal(true)}>
+          <Text style={styles.quitButtonText}>إنهاء الاختبار</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal: Answer Correct */}
+      {/* Modal de confirmation de réponse */}
       <Modal
         visible={showCorrectModal}
         transparent
@@ -362,27 +594,32 @@ const TestScreen = ({ navigation, route }) => {
         onRequestClose={() => setShowCorrectModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>تقييم الإجابة</Text>
-            <Text style={styles.modalText}>هل قرأت الآيات بشكل صحيح؟</Text>
+            <Text style={styles.modalTitle}>هل أجبت بشكل صحيح؟</Text>
+            <Text style={styles.modalText}>
+              هل تمكنت من تلاوة الآية التالية بشكل صحيح؟
+            </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonSuccess]}
-                onPress={() => handleAnswerCorrect(true)}
-                activeOpacity={0.85}>
-                <Text style={styles.modalButtonText}>✓ نعم</Text>
+                onPress={() => handleAnswerCorrect(true)}>
+                <Text style={styles.modalButtonText}>✓ نعم، أجبت بشكل صحيح</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonError]}
-                onPress={() => handleAnswerCorrect(false)}
-                activeOpacity={0.85}>
-                <Text style={styles.modalButtonText}>✗ لا</Text>
+                onPress={() => handleAnswerCorrect(false)}>
+                <Text style={styles.modalButtonText}>✗ لا، أخطأت</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary]}
+                onPress={() => setShowCorrectModal(false)}>
+                <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>إلغاء</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Modal: Quit Confirmation */}
+      {/* Modal de confirmation de sortie */}
       <Modal
         visible={showQuitModal}
         transparent
@@ -390,24 +627,20 @@ const TestScreen = ({ navigation, route }) => {
         onRequestClose={() => setShowQuitModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>تأكيد الخروج</Text>
+            <Text style={styles.modalTitle}>إنهاء الاختبار؟</Text>
             <Text style={styles.modalText}>
-              هل تريد إنهاء الاختبار؟
+              هل أنت متأكد من رغبتك في إنهاء الاختبار؟ سيتم حفظ نتائجك الحالية.
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonPrimary]}
-                onPress={() => setShowQuitModal(false)}
-                activeOpacity={0.85}>
-                <Text style={styles.modalButtonText}>متابعة</Text>
+                onPress={handleQuit}>
+                <Text style={styles.modalButtonText}>نعم، إنهاء الاختبار</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={handleQuit}
-                activeOpacity={0.85}>
-                <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>
-                  إنهاء
-                </Text>
+                onPress={() => setShowQuitModal(false)}>
+                <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>إلغاء</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -426,26 +659,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: SPACING.md,
+    gap: hp(16),
   },
   loadingText: {
     fontSize: FONT_SIZES.md,
     color: colors.textSecondary,
   },
   
+  // HEADER
   header: {
     backgroundColor: colors.primary,
-    paddingVertical: hp(12),
-    paddingHorizontal: wp(16),
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp(2) },
-    shadowOpacity: 0.1,
-    shadowRadius: wp(4),
-    elevation: 3,
+    paddingTop: hp(15),
+    paddingBottom: hp(20),
+    paddingHorizontal: wp(20),
     borderBottomLeftRadius: RADIUS.xl,
     borderBottomRightRadius: RADIUS.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: hp(6) },
+    shadowOpacity: 0.12,
+    shadowRadius: wp(10),
+    elevation: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   backButton: {
     width: wp(36),
@@ -627,6 +862,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   controlButtonText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
+  },
+  lastQuestionInfo: {
+    backgroundColor: colors.secondaryLight,
+    paddingVertical: hp(12),
+    paddingHorizontal: wp(16),
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+  },
+  lastQuestionText: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     color: colors.primary,

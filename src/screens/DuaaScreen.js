@@ -11,7 +11,15 @@ import {
 import colors from '../styles/colors';
 
 const DuaaScreen = ({ navigation, route }) => {
-  const { testType, surahNumber, pageFrom, pageTo, hizbNumber } = route.params;
+  const { 
+    testType, 
+    surahNumber, 
+    pageFrom, 
+    pageTo, 
+    hizbNumber,
+    selectionMode,
+    questionCount 
+  } = route.params;
 
   const handleReady = () => {
     navigation.navigate('Test', {
@@ -20,6 +28,8 @@ const DuaaScreen = ({ navigation, route }) => {
       pageFrom,
       pageTo,
       hizbNumber,
+      selectionMode,
+      questionCount,
     });
   };
 
@@ -71,6 +81,17 @@ const DuaaScreen = ({ navigation, route }) => {
             {getTestInfo()}
           </Text>
         </View>
+
+        {questionCount && (
+          <View style={styles.testDetailsCard}>
+            <Text style={styles.testDetailsText}>
+              عدد الأسئلة: {questionCount}
+            </Text>
+            <Text style={styles.testDetailsText}>
+              الترتيب: {selectionMode === 'sequential' ? 'متسلسل' : 'عشوائي'}
+            </Text>
+          </View>
+        )}
 
         <TouchableOpacity
           style={styles.readyButton}
@@ -224,6 +245,23 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   
+  testDetailsCard: {
+    width: '100%',
+    backgroundColor: colors.bgWhite,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  testDetailsText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    textAlign: 'right',
+    marginBottom: 8,
+  },
+  
   readyButton: {
     width: '100%',
     backgroundColor: colors.primary,
@@ -241,14 +279,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textLight,
     textAlign: 'center',
-  },
-  
-  motivationText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    lineHeight: 22,
   },
 });
 

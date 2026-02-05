@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  TextInput,
   Alert,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -15,6 +16,8 @@ import quranData from '../data/quranData';
 
 const SurahSelectionScreen = ({ navigation }) => {
   const [selectedSurah, setSelectedSurah] = useState('');
+  const [questionCount, setQuestionCount] = useState('');
+  const [mode, setMode] = useState('sequential');
 
   const handleStartTest = () => {
     if (!selectedSurah) {
@@ -22,15 +25,25 @@ const SurahSelectionScreen = ({ navigation }) => {
       return;
     }
 
+    if (mode === 'sequential' && (!questionCount || parseInt(questionCount) <= 0)) {
+      Alert.alert('تنبيه', 'يجب تحديد عدد الأسئلة عند اختيار الوضع المتسلسل');
+      return;
+    }
+
     navigation.navigate('Duaa', {
       testType: 'surah',
       surahNumber: parseInt(selectedSurah),
+      selectionMode: mode,
+      questionCount: questionCount ? parseInt(questionCount) : null,
     });
   };
 
   const selectedSurahData = selectedSurah 
     ? quranData.surahs.find(s => s.number === parseInt(selectedSurah))
     : null;
+
+  // Validation du bouton
+  const isButtonDisabled = !selectedSurah || (mode === 'sequential' && (!questionCount || parseInt(questionCount) <= 0));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,6 +62,7 @@ const SurahSelectionScreen = ({ navigation }) => {
 
       <ScrollView 
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}>
         
         <View style={styles.content}>
@@ -82,9 +96,59 @@ const SurahSelectionScreen = ({ navigation }) => {
                   />
                 ))}
               </Picker>
-              <View style={styles.pickerUnderline} />
             </View>
           </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ترتيب الأسئلة</Text>
+            <View style={styles.radioGroup}>
+              <TouchableOpacity
+                style={[styles.radioButton, mode === 'sequential' && styles.radioButtonActive]}
+                onPress={() => setMode('sequential')}>
+                <Text style={[styles.radioText, mode === 'sequential' && styles.radioTextActive]}>
+                  متسلسل (حسب ترتيب المصحف)
+                </Text>
+                <View style={[styles.radio, mode === 'sequential' && styles.radioActive]}>
+                  {mode === 'sequential' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.radioButton, mode === 'random' && styles.radioButtonActive]}
+                onPress={() => setMode('random')}>
+                <Text style={[styles.radioText, mode === 'random' && styles.radioTextActive]}>
+                  عشوائي (بدون ترتيب)
+                </Text>
+                <View style={[styles.radio, mode === 'random' && styles.radioActive]}>
+                  {mode === 'random' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.pickerCard}>
+            <Text style={styles.label}>
+              عدد الأسئلة {mode === 'sequential' ? '(إجباري)' : '(اختياري)'}
+            </Text>
+            <TextInput
+              style={styles.numberInput}
+              keyboardType="numeric"
+              value={questionCount}
+              onChangeText={setQuestionCount}
+              placeholder="أدخل عدد الأسئلة"
+              placeholderTextColor={colors.textSecondary}
+              textAlign="right"
+            />
+          </View>
+
+          {mode === 'sequential' && (!questionCount || parseInt(questionCount) <= 0) && (
+            <View style={styles.warningBox}>
+              <Text style={styles.warningIcon}>⚠️</Text>
+              <Text style={styles.warningText}>
+                يجب تحديد عدد الأسئلة عند اختيار الوضع المتسلسل
+              </Text>
+            </View>
+          )}
 
           {selectedSurahData && (
             <View style={styles.surahInfoCard}>
@@ -117,13 +181,16 @@ const SurahSelectionScreen = ({ navigation }) => {
           <TouchableOpacity
             style={[
               styles.startButton,
-              !selectedSurah && styles.startButtonDisabled
+              isButtonDisabled && styles.startButtonDisabled
             ]}
             onPress={handleStartTest}
             activeOpacity={0.85}
-            disabled={!selectedSurah}>
+            disabled={isButtonDisabled}>
             <Text style={styles.startButtonText}>
-              {selectedSurah ? 'بدء الاختبار' : 'اختر السورة أولاً'}
+              {isButtonDisabled 
+                ? (mode === 'sequential' && !questionCount ? 'حدد عدد الأسئلة أولاً' : 'اختر السورة أولاً')
+                : 'بدء الاختبار'
+              }
             </Text>
           </TouchableOpacity>
         </View>
@@ -153,7 +220,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    marginTop: 30,
     width: 46,
     height: 46,
     borderRadius: 23,
@@ -163,10 +229,9 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   backButtonText: {
-    fontSize: 25,
+    fontSize: 24,
     color: colors.textLight,
     fontWeight: 'bold',
-    marginBottom: 20,
   },
   headerContent: {
     flex: 1,
@@ -176,16 +241,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: colors.textLight,
-    marginBottom: 4,
-    marginTop: 35,
-    marginRight: 15
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.85)',
+    marginRight: 15,
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 30,
   },
   content: {
     padding: 20,
@@ -197,10 +259,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     marginBottom: 24,
-    gap: 12,
-  },
-  instructionIcon: {
-    fontSize: 24,
   },
   instructionText: {
     flex: 1,
@@ -236,21 +294,106 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgLight,
     borderRadius: 12,
     color: colors.textPrimary,
-    writingDirection: 'rtl',
   },
   pickerItem: {
     fontSize: 16,
     textAlign: 'right',
-    writingDirection: 'rtl',
   },
-  pickerUnderline: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: colors.secondary,
-    borderRadius: 1,
+  numberInput: {
+    backgroundColor: colors.bgLight,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  section: {
+    backgroundColor: colors.bgWhite,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: 16,
+    textAlign: 'right',
+  },
+  radioGroup: {
+    gap: 12,
+  },
+  radioButton: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    backgroundColor: colors.bgLight,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  radioButtonActive: {
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
+  },
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.textSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  radioActive: {
+    borderColor: colors.primary,
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  radioText: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.textPrimary,
+    textAlign: 'right',
+    fontWeight: '500',
+  },
+  radioTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  warningBox: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    backgroundColor: '#FFF3CD',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FFE69C',
+    gap: 12,
+  },
+  warningIcon: {
+    fontSize: 20,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#856404',
+    textAlign: 'right',
+    fontWeight: '600',
   },
   surahInfoCard: {
     backgroundColor: colors.primaryLight,
@@ -334,10 +477,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
-    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
   },
   startButtonDisabled: {
     backgroundColor: colors.textSecondary,
@@ -348,19 +489,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.textLight,
-  },
-  startButtonIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  startButtonIconText: {
-    fontSize: 18,
-    color: colors.textLight,
-    fontWeight: 'bold',
   },
 });
 

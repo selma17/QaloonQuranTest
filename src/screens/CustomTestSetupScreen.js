@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import { Picker } from '@react-native-picker/picker';
 import colors from '../styles/colors';
 import quranData from '../data/quranData';
 
-const CustomTestSetupScreen = ({ navigation }) => {
+const CustomTestSetupScreen = ({ navigation, route }) => {
+  const autoStartParams = route.params;
   const [sourceType, setSourceType] = useState('surahs');
   const [selectedSurahs, setSelectedSurahs] = useState([]);
   const [pageRanges, setPageRanges] = useState([{ from: '', to: '' }]);
@@ -25,6 +26,19 @@ const CustomTestSetupScreen = ({ navigation }) => {
 
   const [currentSurah, setCurrentSurah] = useState('');
   const [currentHizb, setCurrentHizb] = useState('');
+
+  useEffect(() => {
+    if (autoStartParams?.autoStart) {
+      navigation.replace('CustomTest', {
+        sourceType: autoStartParams.sourceType,
+        selectedSurahs: autoStartParams.selectedSurahs,
+        pageRanges: autoStartParams.pageRanges,
+        selectedHizbs: autoStartParams.selectedHizbs,
+        mode: autoStartParams.mode,
+        versesToRead: autoStartParams.versesToRead,
+      });
+    }
+  }, [autoStartParams, navigation]);
 
   const handleAddPageRange = () => {
     setPageRanges([...pageRanges, { from: '', to: '' }]);
