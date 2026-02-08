@@ -82,17 +82,6 @@ const DuaaScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {questionCount && (
-          <View style={styles.testDetailsCard}>
-            <Text style={styles.testDetailsText}>
-              عدد الأسئلة: {questionCount}
-            </Text>
-            <Text style={styles.testDetailsText}>
-              الترتيب: {selectionMode === 'sequential' ? 'متسلسل' : 'عشوائي'}
-            </Text>
-          </View>
-        )}
-
         <TouchableOpacity
           style={styles.readyButton}
           onPress={handleReady}
@@ -108,8 +97,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bgLight,
-  },
-  
+  }, 
   header: {
     backgroundColor: colors.primary,
     paddingTop: 16,
@@ -146,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: '700',
     color: colors.textLight,
     marginTop: 25,
@@ -244,24 +232,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textAlign: 'right',
   },
-  
-  testDetailsCard: {
-    width: '100%',
-    backgroundColor: colors.bgWhite,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  testDetailsText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    textAlign: 'right',
-    marginBottom: 8,
-  },
-  
   readyButton: {
     width: '100%',
     backgroundColor: colors.primary,

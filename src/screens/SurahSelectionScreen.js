@@ -66,11 +66,6 @@ const SurahSelectionScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}>
         
         <View style={styles.content}>
-          <View style={styles.instructionBox}>
-            <Text style={styles.instructionText}>
-              اختر السورة التي تريد اختبار حفظها
-            </Text>
-          </View>
 
           <View style={styles.pickerCard}>
             <Text style={styles.label}>اختر السورة:</Text>
@@ -96,6 +91,7 @@ const SurahSelectionScreen = ({ navigation }) => {
                   />
                 ))}
               </Picker>
+              <View style={styles.pickerUnderline} />
             </View>
           </View>
 
@@ -106,7 +102,7 @@ const SurahSelectionScreen = ({ navigation }) => {
                 style={[styles.radioButton, mode === 'sequential' && styles.radioButtonActive]}
                 onPress={() => setMode('sequential')}>
                 <Text style={[styles.radioText, mode === 'sequential' && styles.radioTextActive]}>
-                  متسلسل (حسب ترتيب المصحف)
+                 حسب ترتيب المصحف
                 </Text>
                 <View style={[styles.radio, mode === 'sequential' && styles.radioActive]}>
                   {mode === 'sequential' && <View style={styles.radioInner} />}
@@ -117,7 +113,7 @@ const SurahSelectionScreen = ({ navigation }) => {
                 style={[styles.radioButton, mode === 'random' && styles.radioButtonActive]}
                 onPress={() => setMode('random')}>
                 <Text style={[styles.radioText, mode === 'random' && styles.radioTextActive]}>
-                  عشوائي (بدون ترتيب)
+                  عشوائي 
                 </Text>
                 <View style={[styles.radio, mode === 'random' && styles.radioActive]}>
                   {mode === 'random' && <View style={styles.radioInner} />}
@@ -128,25 +124,22 @@ const SurahSelectionScreen = ({ navigation }) => {
 
           <View style={styles.pickerCard}>
             <Text style={styles.label}>
-              عدد الأسئلة {mode === 'sequential' ? '(إجباري)' : '(اختياري)'}
+              عدد الأسئلة 
             </Text>
             <TextInput
               style={styles.numberInput}
               keyboardType="numeric"
               value={questionCount}
               onChangeText={setQuestionCount}
-              placeholder="أدخل عدد الأسئلة"
+              placeholder="--"
               placeholderTextColor={colors.textSecondary}
-              textAlign="right"
+              textAlign="center"
             />
           </View>
 
           {mode === 'sequential' && (!questionCount || parseInt(questionCount) <= 0) && (
             <View style={styles.warningBox}>
-              <Text style={styles.warningIcon}>⚠️</Text>
-              <Text style={styles.warningText}>
-                يجب تحديد عدد الأسئلة عند اختيار الوضع المتسلسل
-              </Text>
+              
             </View>
           )}
 
@@ -220,6 +213,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
+    marginTop: 30,
     width: 46,
     height: 46,
     borderRadius: 23,
@@ -229,19 +223,21 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: 25,
     color: colors.textLight,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
   headerContent: {
     flex: 1,
     alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 25,
     fontWeight: '700',
     color: colors.textLight,
     marginRight: 15,
+    marginTop: 30,
   },
   scrollView: {
     flex: 1,
@@ -252,26 +248,11 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  instructionBox: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: colors.secondaryLight,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  instructionText: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.textPrimary,
-    textAlign: 'right',
-    fontWeight: '500',
-  },
   pickerCard: {
     backgroundColor: colors.bgWhite,
     borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
+    padding: 15,
+    marginBottom: 15,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
@@ -284,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 5,
     textAlign: 'right',
   },
   pickerWrapper: {
@@ -299,20 +280,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'right',
   },
+  pickerUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: colors.secondary,
+    borderRadius: 1,
+  },
   numberInput: {
     backgroundColor: colors.bgLight,
     borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: colors.textPrimary,
+    padding: 10,
+    fontSize: 20,
+    color: colors.primary,
     borderWidth: 1,
     borderColor: colors.borderLight,
+    textAlign: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    fontWeight: "700"
   },
   section: {
     backgroundColor: colors.bgWhite,
     borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
+    padding: 15,
+    marginBottom: 15,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
@@ -325,24 +319,24 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 5,
     textAlign: 'right',
   },
   radioGroup: {
-    gap: 12,
+    gap: 5,
   },
   radioButton: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     backgroundColor: colors.bgLight,
     borderRadius: 14,
-    padding: 16,
+    padding: 10,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   radioButtonActive: {
     backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
+    borderColor: colors.secondary,
   },
   radio: {
     width: 24,
@@ -372,27 +366,6 @@ const styles = StyleSheet.create({
   },
   radioTextActive: {
     color: colors.primary,
-    fontWeight: '600',
-  },
-  warningBox: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: '#FFF3CD',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#FFE69C',
-    gap: 12,
-  },
-  warningIcon: {
-    fontSize: 20,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#856404',
-    textAlign: 'right',
     fontWeight: '600',
   },
   surahInfoCard: {
@@ -435,7 +408,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: colors.primary,
-    marginBottom: 4,
   },
   surahType: {
     fontSize: 14,

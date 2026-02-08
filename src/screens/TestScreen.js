@@ -23,10 +23,9 @@ const TestScreen = ({ navigation, route }) => {
     pageTo, 
     hizbNumber,
     questionCount,
-    selectionMode
+    selectionMode = 'random'
   } = route.params;
 
-  // Déterminer si on a un nombre de questions défini dès le départ
   const hasDefinedQuestionCount = questionCount && questionCount > 0;
 
   const [allQuestions, setAllQuestions] = useState([]);
@@ -35,18 +34,16 @@ const TestScreen = ({ navigation, route }) => {
   const [questionNumber, setQuestionNumber] = useState(1);
   const [score, setScore] = useState(0);
   const [errors, setErrors] = useState(0);
-  const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [showNewQuestionModal, setShowNewQuestionModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [usedVerses, setUsedVerses] = useState(new Set());
 
-  // Générer les questions au chargement
   useEffect(() => {
     const generateQuestions = () => {
       try {
         let allVerses = [];
         
-        // Récupérer tous les versets selon le type de test
         if (testType === 'surah') {
           const surahVerses = quranData.versesDetailed[surahNumber] || [];
           allVerses = surahVerses.map(v => ({
@@ -93,14 +90,8 @@ const TestScreen = ({ navigation, route }) => {
 
         let questions = [];
 
-        // Si un nombre de questions est défini
         if (hasDefinedQuestionCount) {
           if (selectionMode === 'sequential') {
-            // Mode séquentiel : Division en blocs
-            // Exemple : 200 versets, 5 questions → 5 blocs de 40 versets
-            // Chaque bloc donne 1 question aléatoire
-            
-            // Trier tous les versets
             allVerses.sort((a, b) => {
               if (a.surahNumber !== b.surahNumber) {
                 return a.surahNumber - b.surahNumber;
@@ -116,19 +107,16 @@ const TestScreen = ({ navigation, route }) => {
             for (let i = 0; i < numQuestions; i++) {
               const blockStart = i * blockSize;
               const blockEnd = (i === numQuestions - 1) 
-                ? allVerses.length  // Dernier bloc prend tous les versets restants
+                ? allVerses.length
                 : (i + 1) * blockSize;
               
-              // Choisir un verset aléatoire dans ce bloc
               const randomIndexInBlock = blockStart + Math.floor(Math.random() * (blockEnd - blockStart));
               
               if (randomIndexInBlock < allVerses.length) {
                 questions.push(allVerses[randomIndexInBlock]);
               }
             }
-
           } else {
-            // Mode aléatoire : mélanger et prendre les N premiers
             const shuffled = [...allVerses];
             for (let i = shuffled.length - 1; i > 0; i--) {
               const j = Math.floor(Math.random() * (i + 1));
@@ -142,10 +130,8 @@ const TestScreen = ({ navigation, route }) => {
             setCurrentVerse(questions[0]);
           }
         } else {
-          // Mode infini : pas de limite de questions, charger le premier verset
           setAllQuestions(allVerses);
           
-          // En mode infini, charger un verset aléatoire
           if (allVerses.length > 0) {
             const randomIndex = Math.floor(Math.random() * allVerses.length);
             setCurrentVerse(allVerses[randomIndex]);
@@ -163,16 +149,14 @@ const TestScreen = ({ navigation, route }) => {
     generateQuestions();
   }, [testType, surahNumber, pageFrom, pageTo, hizbNumber, questionCount, selectionMode]);
 
-  // Charger un verset aléatoire (mode infini uniquement)
   const loadRandomVerse = React.useCallback(() => {
-    if (hasDefinedQuestionCount) return; // Ne pas utiliser en mode avec limite
+    if (hasDefinedQuestionCount) return;
 
     setLoading(true);
     
     try {
       let verses = [];
       
-      // Récupérer tous les versets selon le type de test
       if (testType === 'surah') {
         const surahVerses = quranData.versesDetailed[surahNumber] || [];
         verses = surahVerses.map(v => ({
@@ -211,18 +195,15 @@ const TestScreen = ({ navigation, route }) => {
         });
       }
 
-      // Filtrer avec l'état actuel
       setUsedVerses(currentUsed => {
         const availableVerses = verses.filter(v => {
           const verseKey = `${v.surahNumber}-${v.verseNumber}`;
           return !currentUsed.has(verseKey);
         });
 
-        // Si tous vus, réinitialiser
         let versesToChooseFrom = availableVerses.length > 0 ? availableVerses : verses;
         let shouldReset = availableVerses.length === 0;
 
-        // Sélection aléatoire
         const randomValue = typeof crypto !== 'undefined' && crypto.getRandomValues 
           ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1)
           : Math.random();
@@ -235,7 +216,6 @@ const TestScreen = ({ navigation, route }) => {
           
           setCurrentVerse(selectedVerse);
 
-          // Retourner le nouveau Set
           if (shouldReset) {
             return new Set([verseKey]);
           } else {
@@ -275,41 +255,7 @@ const TestScreen = ({ navigation, route }) => {
         juz: prevVerse.juz,
       });
     } else {
-      // Logique pour passer à la sourate précédente
-      if (testType === 'pages') {
-        const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
-        const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
-        
-        if (currentSurahIndex > 0) {
-          const prevSurahNumber = surahs[currentSurahIndex - 1];
-          const prevSurahVerses = quranData.versesDetailed[prevSurahNumber];
-          
-          if (prevSurahVerses && prevSurahVerses.length > 0) {
-            const lastVerse = prevSurahVerses[prevSurahVerses.length - 1];
-            setCurrentVerse({
-              surahNumber: prevSurahNumber,
-              surahName: quranData.getSurahName(prevSurahNumber),
-              verseNumber: lastVerse.number,
-              text: lastVerse.text,
-              page: lastVerse.page,
-              juz: lastVerse.juz,
-            });
-          }
-        } else {
-          Alert.alert('تنبيه', 'هذه هي الآية الأولى في النطاق المحدد');
-        }
-      } else if (testType === 'Hizb') {
-        const hizbVerses = quranData.getVersesByHizb(hizbNumber);
-        if (hizbVerses && hizbVerses.length > 0) {
-          const firstVerse = hizbVerses[0];
-          if (currentVerse.surahNumber === firstVerse.surahNumber && 
-              currentVerse.verseNumber === firstVerse.verseNumber) {
-            Alert.alert('تنبيه', 'هذه هي الآية الأولى في الحزب');
-          }
-        }
-      } else {
-        Alert.alert('تنبيه', 'هذه هي الآية الأولى في السورة');
-      }
+      Alert.alert('تنبيه', 'هذه هي أول آية في السورة');
     }
   };
 
@@ -332,141 +278,138 @@ const TestScreen = ({ navigation, route }) => {
         juz: nextVerse.juz,
       });
     } else {
-      // Logique pour passer à la sourate suivante
-      if (testType === 'pages') {
-        const surahs = quranData.getSurahsByPageRange(pageFrom, pageTo);
-        const currentSurahIndex = surahs.indexOf(currentVerse.surahNumber);
-        
-        if (currentSurahIndex < surahs.length - 1) {
-          const nextSurahNumber = surahs[currentSurahIndex + 1];
-          const nextSurahVerses = quranData.versesDetailed[nextSurahNumber];
-          
-          if (nextSurahVerses && nextSurahVerses.length > 0) {
-            const firstVerse = nextSurahVerses[0];
-            setCurrentVerse({
-              surahNumber: nextSurahNumber,
-              surahName: quranData.getSurahName(nextSurahNumber),
-              verseNumber: firstVerse.number,
-              text: firstVerse.text,
-              page: firstVerse.page,
-              juz: firstVerse.juz,
-            });
-          }
-        } else {
-          Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في النطاق المحدد');
-        }
-      } else if (testType === 'Hizb') {
-        const hizbVerses = quranData.getVersesByHizb(hizbNumber);
-        if (hizbVerses && hizbVerses.length > 0) {
-          const lastVerse = hizbVerses[hizbVerses.length - 1];
-          if (currentVerse.surahNumber === lastVerse.surahNumber && 
-              currentVerse.verseNumber === lastVerse.verseNumber) {
-            Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في الحزب');
-          }
-        }
-      } else {
-        Alert.alert('تنبيه', 'هذه هي الآية الأخيرة في السورة');
-      }
+      Alert.alert('تنبيه', 'هذه هي آخر آية في السورة');
     }
   };
 
-  const handleNewQuestion = () => {
-    setShowCorrectModal(true);
-  };
-
-  const handleAnswerCorrect = (isCorrect) => {
-    setShowCorrectModal(false);
-    
-    if (isCorrect) {
-      setScore(score + 1);
-    } else {
-      setErrors(errors + 1);
-    }
-
-    // Si nombre de questions défini
+  const handleNextQuestion = () => {
     if (hasDefinedQuestionCount) {
       if (currentQuestionIndex < allQuestions.length - 1) {
-        // Passer à la question suivante
         const nextIndex = currentQuestionIndex + 1;
         setCurrentQuestionIndex(nextIndex);
         setCurrentVerse(allQuestions[nextIndex]);
         setQuestionNumber(questionNumber + 1);
       } else {
-        // C'était la dernière question → Fin du test automatique
-        setTimeout(() => {
-          handleFinishTest(isCorrect);
-        }, 300); // Petit délai pour que l'utilisateur voie la transition
+        navigation.navigate('Results', {
+          score: score,
+          errors: errors,
+          testType,
+          surahNumber,
+          pageFrom,
+          pageTo,
+          hizbNumber,
+          questionCount,
+          selectionMode,
+        });
       }
     } else {
-      // Mode infini : charger un nouveau verset aléatoire
-      setQuestionNumber(questionNumber + 1);
       loadRandomVerse();
+      setQuestionNumber(questionNumber + 1);
     }
   };
 
-  const handleFinishTest = (lastAnswerWasCorrect = null) => {
-    // Calculer le score final en tenant compte de la dernière réponse si nécessaire
-    let finalScore = score;
-    let finalErrors = errors;
+  const handleWrongAnswer = () => {
+    setErrors(errors + 1);
     
-    if (lastAnswerWasCorrect !== null) {
-      if (lastAnswerWasCorrect) {
-        finalScore = score + 1;
+    if (hasDefinedQuestionCount) {
+      if (currentQuestionIndex < allQuestions.length - 1) {
+          const nextIndex = currentQuestionIndex + 1;
+          setCurrentQuestionIndex(nextIndex);
+          setCurrentVerse(allQuestions[nextIndex]);
+          setQuestionNumber(questionNumber + 1);
       } else {
-        finalErrors = errors + 1;
+        navigation.navigate('Results', {
+          score: score,
+          errors: errors + 1,
+          testType,
+          surahNumber,
+          pageFrom,
+          pageTo,
+          hizbNumber,
+          questionCount,
+          selectionMode,
+        });
       }
+    } else {
+      loadRandomVerse();
+      setQuestionNumber(questionNumber + 1);
     }
-    
-    navigation.navigate('Results', {
-      score: finalScore,
-      errors: finalErrors,
-      totalQuestions: hasDefinedQuestionCount ? allQuestions.length : questionNumber - 1,
-      testType,
-      surahNumber,
-      pageFrom,
-      pageTo,
-      hizbNumber,
-    });
+  };
+
+  const handleNewQuestionCorrect = () => {
+    setShowNewQuestionModal(false);
+    setScore(score + 1);
+    loadRandomVerse();
+    setQuestionNumber(questionNumber + 1);
+  };
+
+  const handleNewQuestionWrong = () => {
+    setShowNewQuestionModal(false);
+    setErrors(errors + 1);
+    loadRandomVerse();
+    setQuestionNumber(questionNumber + 1);
+  };
+
+  const handleNewQuestionClick = () => {
+    setShowNewQuestionModal(true);
   };
 
   const handleQuit = () => {
     setShowQuitModal(false);
     
     if (hasDefinedQuestionCount) {
-      // Compter les questions restantes comme erreurs
-      const questionsAnswered = currentQuestionIndex + 1;
+      const questionsAnswered = questionNumber - 1;
       const remainingQuestions = allQuestions.length - questionsAnswered;
+      const finalErrors = errors + remainingQuestions;
       
       navigation.navigate('Results', {
-        score,
-        errors: errors + remainingQuestions,
-        totalQuestions: allQuestions.length,
+        score: score,
+        errors: finalErrors,
         testType,
         surahNumber,
         pageFrom,
         pageTo,
         hizbNumber,
+        questionCount,
+        selectionMode,
       });
     } else {
       navigation.navigate('Results', {
-        score,
-        errors,
-        totalQuestions: questionNumber - 1,
+        score: score,
+        errors: errors,
         testType,
         surahNumber,
         pageFrom,
         pageTo,
         hizbNumber,
+        questionCount,
+        selectionMode,
       });
     }
   };
 
-  if (loading || !currentVerse) {
+  const handleBackToMain = () => {
+    navigation.navigate('Main');
+  };
+
+  if (loading) {
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>جاري تحميل السؤال...</Text>
+          <Text style={styles.loadingText}>جارٍ تحميل الأسئلة...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!currentVerse) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>لا توجد آيات متاحة</Text>
         </View>
       </SafeAreaView>
     );
@@ -474,173 +417,226 @@ const TestScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
       
       <View style={styles.header}>
-        <TouchableOpacity
+        <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => setShowQuitModal(true)}>
-          <Text style={styles.backButtonText}>✕</Text>
+          onPress={handleBackToMain}
+        >
+          <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
+        
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>اختبار القرآن</Text>
+          <Text style={styles.headerTitle}>اختبار القرآن الكريم</Text>
         </View>
       </View>
 
       <View style={styles.scoreBar}>
         <View style={styles.scoreItem}>
-          <Text style={styles.scoreValue}>{errors}</Text>
-          <Text style={styles.scoreLabel}>✗</Text>
-        </View>
-        <View style={styles.scoreDivider} />
-        <View style={styles.scoreItem}>
           <Text style={styles.scoreValue}>{score}</Text>
-          <Text style={styles.scoreLabel}>✓</Text>
+          <Text style={styles.scoreLabel}>صحيح</Text>
         </View>
+        
         <View style={styles.scoreDivider} />
+        
         <View style={styles.scoreItem}>
-          <Text style={styles.scoreValue}>
-            {hasDefinedQuestionCount 
-              ? `${currentQuestionIndex + 1}/${allQuestions.length}`
-              : questionNumber
-            }
-          </Text>
-          <Text style={styles.scoreLabel}>السؤال</Text>
+          <Text style={styles.scoreValue}>{errors}</Text>
+          <Text style={styles.scoreLabel}>خطأ</Text>
         </View>
       </View>
 
-      <ScrollView style={styles.mainContent}>
+      <View style={styles.mainContent}>
         <View style={styles.questionInfo}>
           <View style={styles.questionBadge}>
-            <Text style={styles.questionNumber}>
-              {hasDefinedQuestionCount ? currentQuestionIndex + 1 : questionNumber}
-            </Text>
+            <Text style={styles.questionNumber}>{questionNumber}</Text>
           </View>
+          
           <View style={styles.questionTextContainer}>
-            <Text style={styles.surahName}>{currentVerse.surahName}</Text>
-            <Text style={styles.instructionText}>ما هي الآية التالية؟</Text>
+            <Text style={styles.surahName}>سورة {currentVerse.surahName}</Text>
+            <Text style={styles.instructionText}>
+              اقرأ من قوله تعالى (آية {currentVerse.verseNumber}):
+            </Text>
           </View>
         </View>
 
-        {currentVerse.verseNumber === 1 && currentVerse.surahNumber !== 1 && currentVerse.surahNumber !== 9 && (
-          <View style={styles.bismillahBox}>
-            <Text style={styles.bismillah}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
-          </View>
-        )}
+        <View style={styles.bismillahBox}>
+          <Text style={styles.bismillah}>﷽</Text>
+        </View>
 
         <View style={styles.verseCard}>
           <View style={styles.verseOrnament} />
+          
           <ScrollView 
             style={styles.verseScrollView}
             contentContainerStyle={styles.verseScrollContent}
-            showsVerticalScrollIndicator={false}>
+            showsVerticalScrollIndicator={true}
+            indicatorStyle="default"
+          >
             <Text style={styles.verseText}>{currentVerse.text}</Text>
           </ScrollView>
+          
           <View style={styles.verseOrnament} />
+          
           <View style={styles.verseMetadata}>
             <Text style={styles.metadataText}>
-              الآية {currentVerse.verseNumber} • الصفحة {currentVerse.page} • الجزء {currentVerse.juz}
+              {`الآية ${currentVerse.verseNumber} • الصفحة ${currentVerse.page || '-'} • الجزء ${currentVerse.juz || '-'}`}
             </Text>
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       <View style={styles.controlsContainer}>
+        {hasDefinedQuestionCount && (
+          <View style={styles.questionCounter}>
+            <Text style={styles.questionCounterText}>
+              {`${currentQuestionIndex + 1}/${allQuestions.length}`}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.controlsRow}>
           <TouchableOpacity 
             style={styles.controlButton}
-            onPress={handlePreviousVerse}>
-            <Text style={styles.controlButtonText}>← الآية السابقة</Text>
+            onPress={handlePreviousVerse}
+          >
+            <Text style={styles.controlButtonText}>السابقة</Text>
           </TouchableOpacity>
+          
           <TouchableOpacity 
             style={styles.controlButton}
-            onPress={handleNextVerse}>
-            <Text style={styles.controlButtonText}>الآية التالية →</Text>
+            onPress={handleNextVerse}
+          >
+            <Text style={styles.controlButtonText}>التالية</Text>
           </TouchableOpacity>
         </View>
-        
-        {hasDefinedQuestionCount && currentQuestionIndex === allQuestions.length - 1 ? (
-          // Dernière question : afficher un message au lieu du bouton
-          <View style={styles.lastQuestionInfo}>
-            <Text style={styles.lastQuestionText}>
-              هذا هو السؤال الأخير! سيتم عرض النتائج بعد الإجابة.
-            </Text>
-          </View>
-        ) : null}
         
         <TouchableOpacity 
           style={styles.newQuestionButton}
-          onPress={handleNewQuestion}>
-          <Text style={styles.newQuestionButtonText}>
-            {hasDefinedQuestionCount && currentQuestionIndex === allQuestions.length - 1 
-              ? 'إنهاء الاختبار' 
-              : 'سؤال جديد'
-            }
-          </Text>
+          onPress={handleNewQuestionClick}
+        >
+          <Text style={styles.newQuestionButtonText}>سؤال جديد</Text>
         </TouchableOpacity>
-
+        
         <TouchableOpacity 
           style={styles.quitButton}
-          onPress={() => setShowQuitModal(true)}>
-          <Text style={styles.quitButtonText}>إنهاء الاختبار</Text>
+          onPress={() => setShowQuitModal(true)}
+        >
+          <Text style={styles.quitButtonText}>إنهاء</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal de confirmation de réponse */}
-      <Modal
-        visible={showCorrectModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCorrectModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>هل أجبت بشكل صحيح؟</Text>
-            <Text style={styles.modalText}>
-              هل تمكنت من تلاوة الآية التالية بشكل صحيح؟
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonSuccess]}
-                onPress={() => handleAnswerCorrect(true)}>
-                <Text style={styles.modalButtonText}>✓ نعم، أجبت بشكل صحيح</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonError]}
-                onPress={() => handleAnswerCorrect(false)}>
-                <Text style={styles.modalButtonText}>✗ لا، أخطأت</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={() => setShowCorrectModal(false)}>
-                <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>إلغاء</Text>
-              </TouchableOpacity>
+      {hasDefinedQuestionCount && (
+        <Modal
+          visible={showNewQuestionModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowNewQuestionModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>هل أجبت بشكل صحيح؟</Text>
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonSuccess]}
+                  onPress={() => {
+                    setShowNewQuestionModal(false);
+                    setScore(score + 1);
+                    handleNextQuestion();
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>نعم</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonError]}
+                  onPress={() => {
+                    setShowNewQuestionModal(false);
+                    if (currentQuestionIndex === allQuestions.length - 1) {
+                      navigation.navigate('Results', {
+                        score: score,
+                        errors: errors + 1,
+                        testType,
+                        surahNumber,
+                        pageFrom,
+                        pageTo,
+                        hizbNumber,
+                        questionCount,
+                        selectionMode,
+                      });
+                    } else {
+                      handleWrongAnswer();
+                    }
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>لا</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
 
-      {/* Modal de confirmation de sortie */}
+      {!hasDefinedQuestionCount && (
+        <Modal
+          visible={showNewQuestionModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowNewQuestionModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>هل أجبت بشكل صحيح؟</Text>
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonSuccess]}
+                  onPress={handleNewQuestionCorrect}
+                >
+                  <Text style={styles.modalButtonText}>نعم</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonError]}
+                  onPress={handleNewQuestionWrong}
+                >
+                  <Text style={styles.modalButtonText}>لا</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       <Modal
         visible={showQuitModal}
-        transparent
+        transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowQuitModal(false)}>
+        onRequestClose={() => setShowQuitModal(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>إنهاء الاختبار؟</Text>
+            <Text style={styles.modalTitle}>تأكيد الخروج</Text>
             <Text style={styles.modalText}>
-              هل أنت متأكد من رغبتك في إنهاء الاختبار؟ سيتم حفظ نتائجك الحالية.
+              هل تريد إنهاء الاختبار؟
             </Text>
+            
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonPrimary]}
-                onPress={handleQuit}>
-                <Text style={styles.modalButtonText}>نعم، إنهاء الاختبار</Text>
+                onPress={() => setShowQuitModal(false)}
+              >
+                <Text style={styles.modalButtonText}>متابعة</Text>
               </TouchableOpacity>
+              
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={() => setShowQuitModal(false)}>
-                <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>إلغاء</Text>
+                onPress={handleQuit}
+              >
+                <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>
+                  إنهاء
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -659,28 +655,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: hp(16),
+    gap: SPACING.md,
   },
   loadingText: {
     fontSize: FONT_SIZES.md,
     color: colors.textSecondary,
   },
   
-  // HEADER
   header: {
     backgroundColor: colors.primary,
-    paddingTop: hp(15),
-    paddingBottom: hp(20),
-    paddingHorizontal: wp(20),
-    borderBottomLeftRadius: RADIUS.xl,
-    borderBottomRightRadius: RADIUS.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp(6) },
-    shadowOpacity: 0.12,
-    shadowRadius: wp(10),
-    elevation: 8,
+    paddingVertical: hp(12),
+    paddingHorizontal: wp(16),
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: hp(2) },
+    shadowOpacity: 0.1,
+    shadowRadius: wp(4),
+    elevation: 3,
+    borderBottomLeftRadius: RADIUS.xl,
+    borderBottomRightRadius: RADIUS.xl,
   },
   backButton: {
     width: wp(36),
@@ -709,7 +703,6 @@ const styles = StyleSheet.create({
     marginRight: wp(15),
   },
   
-  // SCORE BAR
   scoreBar: {
     backgroundColor: colors.bgWhite,
     flexDirection: 'row-reverse',
@@ -737,13 +730,11 @@ const styles = StyleSheet.create({
     marginHorizontal: wp(16),
   },
   
-  // MAIN CONTENT
   mainContent: {
     flex: 1,
     padding: SPACING.md,
   },
   
-  // QUESTION INFO
   questionInfo: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
@@ -777,7 +768,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   
-  // BISMILLAH
   bismillahBox: {
     backgroundColor: colors.bgWhite,
     padding: hp(12),
@@ -793,7 +783,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   
-  // VERSE CARD
   verseCard: {
     flex: 1,
     backgroundColor: colors.bgWhite,
@@ -820,6 +809,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   verseScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingVertical: hp(8),
   },
   verseText: {
@@ -841,13 +832,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  // CONTROLS
   controlsContainer: {
     backgroundColor: colors.bgWhite,
     padding: SPACING.md,
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
     gap: hp(10),
+  },
+  questionCounter: {
+    alignSelf: 'center',
+    backgroundColor: colors.secondaryLight,
+    paddingHorizontal: wp(12),
+    paddingVertical: hp(4),
+    borderRadius: RADIUS.sm,
+    marginBottom: hp(4),
+  },
+  questionCounterText: {
+    fontSize: FONT_SIZES.caption,
+    fontWeight: '600',
+    color: colors.primary,
   },
   controlsRow: {
     flexDirection: 'row-reverse',
@@ -862,20 +865,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   controlButtonText: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  lastQuestionInfo: {
-    backgroundColor: colors.secondaryLight,
-    paddingVertical: hp(12),
-    paddingHorizontal: wp(16),
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: colors.secondary,
-  },
-  lastQuestionText: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     color: colors.primary,
@@ -899,19 +888,18 @@ const styles = StyleSheet.create({
   },
   quitButton: {
     backgroundColor: colors.bgLight,
-    paddingVertical: hp(12),
+    paddingVertical: hp(10),
     borderRadius: RADIUS.md,
-    borderWidth: 2,
-    borderColor: colors.error,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   quitButtonText: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.sm,
     fontWeight: '600',
-    color: colors.error,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   
-  // MODALS
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',

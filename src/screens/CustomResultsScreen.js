@@ -228,8 +228,7 @@ const CustomResultsScreen = ({ navigation, route }) => {
           <View style={styles.statsGrid}>
             <View style={styles.statRow}>
               <View style={styles.statContent}>
-                <Text style={styles.statValue}>{totalQuestions}</Text>
-                <Text style={styles.statLabel}>إجمالي الأسئلة</Text>
+                <Text style={styles.statValue}> إجمالي الأسئلة : {totalQuestions} </Text>
               </View>
               <View style={[styles.statIconContainer, { backgroundColor: colors.secondaryLight }]}>
                 <Text style={styles.statIcon}>📝</Text>
@@ -240,8 +239,7 @@ const CustomResultsScreen = ({ navigation, route }) => {
 
             <View style={styles.statRow}>
               <View style={styles.statContent}>
-                <Text style={[styles.statValue, { color: colors.success }]}>{score}</Text>
-                <Text style={styles.statLabel}>إجابات صحيحة</Text>
+                <Text style={[styles.statValue, { color: colors.success }]}>إجابات صحيحة : {score} </Text>
               </View>
               <View style={[styles.statIconContainer, { backgroundColor: colors.successLight }]}>
                 <Text style={styles.statIcon}>✓</Text>
@@ -252,8 +250,7 @@ const CustomResultsScreen = ({ navigation, route }) => {
 
             <View style={styles.statRow}>
               <View style={styles.statContent}>
-                <Text style={[styles.statValue, { color: colors.error }]}>{errors}</Text>
-                <Text style={styles.statLabel}>إجابات خاطئة</Text>
+                <Text style={[styles.statValue, { color: colors.error }]}>إجابات خاطئة : {errors}</Text>
               </View>
               <View style={[styles.statIconContainer, { backgroundColor: colors.errorLight }]}>
                 <Text style={styles.statIcon}>✗</Text>
@@ -271,8 +268,8 @@ const CustomResultsScreen = ({ navigation, route }) => {
           <View style={styles.infoContent}>
             {/* Source Info */}
             <View style={styles.infoRow}>
-              <Text style={styles.infoValue}>{getSourceDescription()}</Text>
               <Text style={styles.infoLabel}>المصدر</Text>
+              <Text style={styles.infoValue}>{getSourceDescription()}</Text>
             </View>
 
             {/* Detailed Source Info for Surahs */}
@@ -329,29 +326,26 @@ const CustomResultsScreen = ({ navigation, route }) => {
 
             {/* Mode */}
             <View style={styles.infoRow}>
-              <Text style={styles.infoValue}>{getModeDescription()}</Text>
               <Text style={styles.infoLabel}>النمط</Text>
+              <Text style={styles.infoValue}>{getModeDescription()}</Text>
             </View>
 
             <View style={styles.infoDivider} />
 
             {/* Verses to Read */}
             <View style={styles.infoRow}>
-              <Text style={styles.infoValue}>{versesToRead} آيات</Text>
               <Text style={styles.infoLabel}>عدد الآيات للقراءة</Text>
+              <Text style={styles.infoValue}>{versesToRead} آيات</Text>
             </View>
 
             <View style={styles.infoDivider} />
 
             {/* Duration */}
             <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>مدة الاختبار </Text>
               <View style={styles.durationContainer}>
-                <View style={styles.durationIcon}>
-                  <Text style={styles.durationIconText}>⏱</Text>
-                </View>
                 <Text style={styles.infoValue}>{formatTime(duration)}</Text>
               </View>
-              <Text style={styles.infoLabel}>مدة الاختبار</Text>
             </View>
           </View>
         </View>
@@ -364,7 +358,6 @@ const CustomResultsScreen = ({ navigation, route }) => {
             activeOpacity={0.85}>
             <View style={styles.buttonContent}>
               <Text style={styles.retryButtonText}>إعادة نفس الاختبار</Text>
-              <Text style={styles.retryButtonIcon}>🔄</Text>
             </View>
           </TouchableOpacity>
 
@@ -410,9 +403,9 @@ const styles = StyleSheet.create({
     marginTop: 35,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 33,
     fontWeight: '700',
-    color: colors.textLight,
+    color: colors.secondary,
   },
   scrollView: {
     flex: 1,
@@ -490,12 +483,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   statsHeader: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.bgLight,
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
   statsTitle: {
-    fontSize: 16,
+    fontSize: 23,
     fontWeight: '700',
     color: colors.primary,
     textAlign: 'right',
@@ -507,17 +500,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 5,
   },
   statIconContainer: {
-    width: 50,
-    height: 50,
+    width: 35,
+    height: 35,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
   },
   statIcon: {
-    fontSize: 24,
+    fontSize: 18,
   },
   statContent: {
     alignItems: 'flex-end',
@@ -525,18 +518,14 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 15,
     fontWeight: '700',
     color: colors.primary,
     marginBottom: 4,
   },
-  statLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
   statDivider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
+    height: 2,
+    backgroundColor: colors.secondary,
     marginVertical: 4,
   },
 
@@ -553,14 +542,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   infoHeader: {
-    backgroundColor: colors.secondaryLight,
+    backgroundColor: colors.bgLight,
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
   infoTitle: {
-    fontSize: 16,
+    fontSize: 23,
     fontWeight: '700',
-    color: colors.secondary,
+    color: colors.primary,
     textAlign: 'right',
   },
   infoContent: {
@@ -573,18 +562,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   infoLabel: {
-    fontSize: 15,
-    color: colors.textSecondary,
+    fontSize: 17,
+    color: colors.primaryDark,
     fontWeight: '600',
   },
   infoValue: {
-    fontSize: 16,
-    color: colors.primary,
+    fontSize: 14,
+    color: colors.textPrimary,
     fontWeight: '700',
   },
   infoDivider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
+    height: 2,
+    backgroundColor: colors.secondary,
     marginVertical: 4,
   },
   detailsContainer: {
@@ -621,25 +610,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  durationIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.secondaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  durationIconText: {
-    fontSize: 18,
-  },
-
   // Action Buttons
   actionsContainer: {
     gap: 12,
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: colors.success,
+    backgroundColor: colors.primary,
     paddingVertical: 16,
     borderRadius: 16,
     shadowColor: colors.success,
@@ -657,11 +634,9 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: colors.textLight,
+    color: colors.secondary,
   },
-  retryButtonIcon: {
-    fontSize: 20,
-  },
+
   newTestButton: {
     backgroundColor: colors.primary,
     paddingVertical: 16,
@@ -675,7 +650,7 @@ const styles = StyleSheet.create({
   newTestButtonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: colors.textLight,
+    color: colors.secondary,
     textAlign: 'center',
   },
   homeButton: {

@@ -12,18 +12,17 @@ import colors from '../styles/colors';
 import { wp, hp, fp, SPACING, FONT_SIZES, RADIUS } from '../utils/responsive';
 
 const ResultsScreen = ({ navigation, route }) => {
-  const { testType, surahNumber, pageFrom, pageTo } = route.params;
-
-  const handleReady = () => {
-    navigation.navigate('Test', {
-      testType,
-      surahNumber,
-      pageFrom,
-      pageTo,
-    });
-  };
-
-  const { score, errors } = route.params;
+  const { 
+    score, 
+    errors,
+    testType, 
+    surahNumber, 
+    pageFrom, 
+    pageTo,
+    hizbNumber,
+    questionCount,
+    selectionMode,
+  } = route.params;
 
   const total = score + errors;
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -63,7 +62,16 @@ const ResultsScreen = ({ navigation, route }) => {
   };
 
   const handleRestartTest = () => {
-    navigation.goBack();
+    // Retourner à DuaaScreen avec tous les paramètres pour relancer le même test
+    navigation.navigate('Duaa', {
+      testType,
+      surahNumber,
+      pageFrom,
+      pageTo,
+      hizbNumber,
+      questionCount,
+      selectionMode,
+    });
   };
 
   return (
@@ -119,9 +127,9 @@ const ResultsScreen = ({ navigation, route }) => {
 
         <View style={styles.quoteCard}>
           <Text style={styles.quoteText}>
-            ﴿ وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِّلْمُؤْمِنِينَ﴾
+            ﴿ وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِلْمُؤْمِنِينَ﴾
           </Text>
-          <Text style={styles.quoteReference}>"الإسرَاء - 82</Text>
+          <Text style={styles.quoteReference}>الإسراء - 82</Text>
         </View>
 
         <View style={styles.buttonsContainer}>
@@ -134,7 +142,7 @@ const ResultsScreen = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={handleReady}
+            onPress={handleRestartTest}
             activeOpacity={0.85}>
             <Text style={styles.secondaryButtonText}>إعادة الاختبار</Text>
           </TouchableOpacity>

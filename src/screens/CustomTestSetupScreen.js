@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   addButton: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primaryLight,
     padding: 10,
     borderRadius: 12,
     alignItems: 'center',
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textLight,
+    color: colors.secondary,
   },
   numberInput: {
     backgroundColor: colors.bgLight,
