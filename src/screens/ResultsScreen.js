@@ -87,16 +87,17 @@ const ResultsScreen = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         
-        <View style={styles.resultHeader}>
-          <View style={styles.emojiCircle}>
+        <View style={styles.resultCard}>
+          <View style={styles.emojiContainer}>
             <Text style={styles.emoji}>{result.emoji}</Text>
           </View>
+          
           <Text style={styles.resultTitle}>{result.title}</Text>
           <Text style={styles.resultMessage}>{result.message}</Text>
-        </View>
-
-        <View style={styles.percentageCircle}>
-          <Text style={styles.percentageValue}>{percentage}%</Text>
+          
+          <View style={styles.percentageBadge}>
+            <Text style={styles.percentageValue}>{percentage}%</Text>
+          </View>
         </View>
 
         <View style={styles.statsContainer}>
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   headerTitle: {
-    fontSize: fp(22),
+    fontSize: fp(30),
     fontWeight: '700',
     color: colors.textLight,
     textAlign: 'center',
@@ -186,72 +187,82 @@ const styles = StyleSheet.create({
     padding: hp(20),
   },
   
-  resultHeader: {
-    alignItems: 'center',
-    marginBottom: hp(20),
-  },
-  emojiCircle: {
-    width: wp(60),
-    height: wp(60),
-    borderRadius: wp(35),
+  resultCard: {
     backgroundColor: colors.bgWhite,
-    borderWidth: 3,
-    borderColor: colors.secondary,
+    borderRadius: wp(24),
+    padding: wp(32),
+    marginBottom: hp(24),
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: hp(8) },
+    shadowOpacity: 0.2,
+    shadowRadius: wp(16),
+    elevation: 10,
+    alignItems: 'center',
+    borderTopWidth: 5,
+    borderTopColor: colors.secondary,
+  },
+  emojiContainer: {
+    width: wp(100),
+    height: wp(100),
+    borderRadius: wp(50),
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: hp(12),
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: wp(6),
-    elevation: 4,
-  },
-  emoji: {
-    fontSize: fp(30),
-  },
-  resultTitle: {
-    fontSize: fp(36),
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: hp(6),
-  },
-  resultMessage: {
-    fontSize: fp(15),
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  
-  percentageCircle: {
-    width: wp(120),
-    height: wp(120),
-    borderRadius: wp(70),
-    backgroundColor: colors.bgWhite,
-    borderWidth: 6,
-    borderColor: colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
     marginBottom: hp(20),
+    borderWidth: 4,
+    borderColor: colors.secondary,
     shadowColor: colors.secondary,
     shadowOffset: { width: 0, height: hp(4) },
     shadowOpacity: 0.25,
-    shadowRadius: wp(8),
-    elevation: 5,
+    shadowRadius: wp(10),
+    elevation: 6,
+  },
+  emoji: {
+    fontSize: fp(48),
+  },
+  resultTitle: {
+    fontSize: fp(44),
+    fontWeight: '800',
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: hp(10),
+  },
+  resultMessage: {
+    fontSize: fp(20),
+    color: colors.textSecondary,
+    marginBottom: hp(24),
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  
+  percentageBadge: {
+    backgroundColor: colors.secondary,
+    paddingHorizontal: wp(48),
+    paddingVertical: hp(18),
+    borderRadius: wp(25),
+    shadowColor: colors.secondary,
+    shadowOffset: { width: 0, height: hp(6) },
+    shadowOpacity: 0.35,
+    shadowRadius: wp(12),
+    elevation: 8,
+    minWidth: wp(160),
+    alignItems: 'center',
   },
   percentageValue: {
-    fontSize: fp(35),
-    fontWeight: '800',
-    color: colors.secondary,
+    fontSize: fp(52),
+    fontWeight: '900',
+    color: colors.textLight,
+    letterSpacing: -2,
   },
   
   statsContainer: {
-    gap: hp(12),
+    gap: hp(10),
     marginBottom: hp(20),
   },
   statCard: {
     backgroundColor: colors.bgWhite,
     borderRadius: wp(16),
-    padding: wp(16),
+    padding: wp(10),
     flexDirection: 'row-reverse',
     alignItems: 'center',
     shadowColor: colors.primary,

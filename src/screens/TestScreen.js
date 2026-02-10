@@ -291,7 +291,7 @@ const TestScreen = ({ navigation, route }) => {
         setQuestionNumber(questionNumber + 1);
       } else {
         navigation.navigate('Results', {
-          score: score,
+          score: score + 1,
           errors: errors,
           testType,
           surahNumber,
@@ -358,7 +358,7 @@ const TestScreen = ({ navigation, route }) => {
     setShowQuitModal(false);
     
     if (hasDefinedQuestionCount) {
-      const questionsAnswered = questionNumber - 1;
+      const questionsAnswered = questionNumber - 1 ;
       const remainingQuestions = allQuestions.length - questionsAnswered;
       const finalErrors = errors + remainingQuestions;
       

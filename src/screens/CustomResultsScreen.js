@@ -597,6 +597,7 @@ const styles = StyleSheet.create({
   pageRangeDetail: {
     width: '100%',
     marginBottom: 8,
+    
   },
   surahHint: {
     fontSize: 11,
