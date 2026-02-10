@@ -123,7 +123,7 @@ const CustomTestSetupScreen = ({ navigation, route }) => {
       return;
     }
 
-    navigation.navigate('CustomTest', {
+    navigation.navigate('Duaa', {
       sourceType,
       selectedSurahs,
       pageRanges: pageRanges.filter(r => r.from && r.to),

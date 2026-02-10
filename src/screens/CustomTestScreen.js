@@ -664,6 +664,8 @@ const styles = StyleSheet.create({
   },
   verseScrollContent: {
     paddingVertical: hp(6),
+    justifyContent: 'center',
+    flexGrow: 1,
   },
   verseText: {
     fontSize: FONT_SIZES.verse,

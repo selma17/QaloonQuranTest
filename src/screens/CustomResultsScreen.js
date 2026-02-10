@@ -166,12 +166,12 @@ const CustomResultsScreen = ({ navigation, route }) => {
       if (savedParams) {
         const params = JSON.parse(savedParams);
         // Naviguer directement vers CustomTest avec les paramètres stockés
-        navigation.navigate('CustomTest', params);
+        navigation.navigate('Duaa', params);
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des paramètres:', error);
       // Fallback : utiliser les paramètres actuels
-      navigation.navigate('CustomTest', {
+      navigation.navigate('Duaa', {
         sourceType,
         selectedSurahs,
         pageRanges,

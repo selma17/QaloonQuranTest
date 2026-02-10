@@ -1,15 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, SafeAreaView,
   StatusBar, ScrollView, Alert, TextInput,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import colors from '../styles/colors';
+import quranData from '../data/qaloonQuran.json';
 
 const HizbSelectionScreen = ({ navigation }) => {
   const [selectedHizb, setSelectedHizb] = useState('');
   const [questionCount, setQuestionCount] = useState('');
   const [mode, setMode] = useState('sequential');
+  const [hizbInfo, setHizbInfo] = useState(null);
+
+  useEffect(() => {
+    if (selectedHizb) {
+      const info = getHizbInfo(parseInt(selectedHizb));
+      setHizbInfo(info);
+    } else {
+      setHizbInfo(null);
+    }
+  }, [selectedHizb]);
+
+  const getHizbInfo = (hizbNumber) => {
+    try {
+      if (!quranData || !Array.isArray(quranData)) {
+        console.error('quranData n\'est pas disponible ou n\'est pas un tableau');
+        return null;
+      }
+      
+      const hizbVerses = quranData.filter(item => {
+        return item.hizb !== undefined && item.hizb === hizbNumber;
+      });
+      
+      if (hizbVerses.length === 0) {
+        console.log(`Aucun verset trouvé pour le hizb ${hizbNumber}`);
+        return null;
+      }
+      
+      const pages = hizbVerses
+        .map(item => parseInt(item.page))
+        .filter(page => !isNaN(page));
+      
+      if (pages.length === 0) return null;
+      
+      const startPage = Math.min(...pages);
+      const endPage = Math.max(...pages);
+      
+      const surahsMap = new Map();
+      hizbVerses.forEach(verse => {
+        if (verse.sura_no && verse.sura_name_ar) {
+          surahsMap.set(verse.sura_no, {
+            number: verse.sura_no,
+            name: verse.sura_name_ar
+          });
+        }
+      });
+      
+      const surahs = Array.from(surahsMap.values())
+        .sort((a, b) => a.number - b.number);
+      
+      return {
+        number: hizbNumber,
+        startPage,
+        endPage,
+        surahs,
+        totalPages: endPage - startPage + 1,
+        totalVerses: hizbVerses.length
+      };
+    } catch (error) {
+      console.error('Erreur dans getHizbInfo:', error);
+      return null;
+    }
+  };
 
   const handleStartTest = () => {
     if (!selectedHizb) {
@@ -126,14 +189,40 @@ const HizbSelectionScreen = ({ navigation }) => {
           {selectedHizbData && (
             <View style={styles.hizbInfoCard}>
               <View style={styles.hizbInfoHeader}>
-                <View style={styles.hizbNumberBadge}>
-                  <Text style={styles.hizbNumberText}>{selectedHizbData.number}</Text>
-                </View>
                 <View style={styles.hizbNameContainer}>
                   <Text style={styles.hizbName}>{selectedHizbData.label}</Text>
-                  <Text style={styles.hizbType}>من القرآن الكريم</Text>
                 </View>
               </View>
+              
+              {/* Nouvelles informations ajoutées */}
+              {hizbInfo && (
+                <View style={styles.hizbDetailsContainer}>
+                  {/* Informations sur les pages */}
+                  <View style={styles.hizbDetailRow}>
+                    <Text style={styles.hizbDetailLabel}>الصفحات:</Text>
+                    <Text style={styles.hizbDetailValue}>
+                      {hizbInfo.startPage} - {hizbInfo.endPage}
+                      {` (${hizbInfo.totalPages} صفحة)`}
+                    </Text>
+                  </View>
+                  
+                  {/* Informations sur les sourates */}
+                  <View style={styles.hizbDetailRow}>
+                    <Text style={styles.hizbDetailLabel}>السور:</Text>
+                    <Text style={styles.hizbDetailValue}>
+                      {hizbInfo.surahs?.map(surah => surah.name).join('، ') || 'غير محدد'}
+                    </Text>
+                  </View>
+                  
+                  {/* Informations supplémentaires */}
+                  <View style={styles.hizbDetailRow}>
+                    <Text style={styles.hizbDetailLabel}>عدد الآيات:</Text>
+                    <Text style={styles.hizbDetailValue}>
+                      {hizbInfo.totalVerses} آية
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
           )}
 
@@ -261,7 +350,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderLight,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: colors.primary,
   },
   section: {
     backgroundColor: colors.bgWhite,
@@ -351,8 +440,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   hizbInfoCard: {
-    backgroundColor: 
-    colors.primaryLight, 
+    backgroundColor: colors.primaryLight, 
     borderRadius: 20, 
     padding: 20, 
     marginBottom: 24,
@@ -362,7 +450,8 @@ const styles = StyleSheet.create({
   hizbInfoHeader: { 
     flexDirection: 'row-reverse', 
     alignItems: 'center', 
-    gap: 16 },
+    gap: 16 
+  },
   hizbNumberBadge: {
     width: 56, 
     height: 56, 
@@ -386,15 +475,36 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end' 
   },
   hizbName: { 
-    fontSize: 24, 
+    fontSize: 26, 
     fontWeight: '700', 
-    color: colors.primary, 
-    marginBottom: 4 
+    color: colors.primary,  
   },
-  hizbType: { 
-    fontSize: 14, 
-    color: colors.textSecondary, 
-    fontWeight: '500' 
+  hizbDetailsContainer: {
+    marginTop: 5,
+    paddingTop: 12,
+    borderTopWidth: 3,
+    borderTopColor: colors.borderLight,
+    gap: 8,
+  },
+  hizbDetailRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 5,
+  },
+  hizbDetailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    minWidth: 60,
+    textAlign: 'right',
+  },
+  hizbDetailValue: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    flex: 1,
+    textAlign: 'right',
+    flexWrap: 'wrap',
   },
   startButton: {
     backgroundColor: colors.primary, 

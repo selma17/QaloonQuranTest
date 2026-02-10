@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import colors from '../styles/colors';
+import quranData from '../data/quranData';
 
 const DuaaScreen = ({ navigation, route }) => {
   const { 
@@ -18,22 +19,77 @@ const DuaaScreen = ({ navigation, route }) => {
     pageTo, 
     hizbNumber,
     selectionMode,
-    questionCount 
+    questionCount,
+    sourceType,
+    selectedSurahs,
+    pageRanges,
+    selectedHizbs,
+    mode,
+    versesToRead,
   } = route.params;
 
   const handleReady = () => {
-    navigation.navigate('Test', {
-      testType,
-      surahNumber,
-      pageFrom,
-      pageTo,
-      hizbNumber,
-      selectionMode,
-      questionCount,
-    });
+    // Vérifier si c'est un test personnalisé (CustomTest) ou un test standard
+    if (sourceType) {
+      // Navigation vers CustomTest avec tous les paramètres
+      navigation.navigate('CustomTest', {
+        sourceType,
+        selectedSurahs,
+        pageRanges,
+        selectedHizbs,
+        questionCount,
+        mode,
+        versesToRead,
+      });
+    } else {
+      // Navigation vers Test standard (ancien comportement)
+      navigation.navigate('Test', {
+        testType,
+        surahNumber,
+        pageFrom,
+        pageTo,
+        hizbNumber,
+        selectionMode,
+        questionCount,
+      });
+    }
   };
 
   const getTestInfo = () => {
+    // Pour les tests personnalisés
+    if (sourceType) {
+      if (sourceType === 'surahs') {
+        if (selectedSurahs && selectedSurahs.length === 1) {
+          // Trouver le nom de la sourate
+          const surah = quranData.surahs.find(s => s.number === selectedSurahs[0]);
+          return surah ? `سورة ${surah.name}` : `السورة رقم ${selectedSurahs[0]}`;
+        } else if (selectedSurahs && selectedSurahs.length > 1) {
+          // Récupérer les noms des sourates sélectionnées
+          const surahNames = selectedSurahs
+            .sort((a, b) => a - b) // Trier par ordre numérique
+            .map(surahNum => {
+              const surah = quranData.surahs.find(s => s.number === surahNum);
+              return surah ? surah.name : `سورة ${surahNum}`;
+            });
+          
+          // Afficher les noms séparés par "، "
+          return `سور : ${surahNames.join(' - ')}`;
+        }
+        return "لم يتم اختيار سور";
+      } else if (sourceType === 'pages') {
+        const totalPages = pageRanges?.reduce((sum, range) => {
+          return sum + (parseInt(range.to) - parseInt(range.from) + 1);
+        }, 0) || 0;
+        return `${totalPages} صفحة`;
+      } else if (sourceType === 'hizbs') {
+        if (selectedHizbs && selectedHizbs.length === 1) {
+          return `الحزب رقم ${selectedHizbs[0]}`;
+        }
+        return `${selectedHizbs?.length || 0} أحزاب`;
+      }
+    }
+    
+    // Pour les tests standards (ancien comportement)
     if (testType === 'surah') {
       return `السورة رقم ${surahNumber}`;
     } else if (testType === 'Hizb') {

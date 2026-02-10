@@ -87,9 +87,9 @@ const MainScreen = ({ navigation }) => {
             activeOpacity={0.85}>
             <View style={styles.cardGradient} />
             <View style={styles.iconContainer}>
-              <Text style={styles.icon}>🗒️</Text>
+              <Text style={styles.icon}>⚙️</Text>
             </View>
-            <Text style={styles.cardTitle}>أنشئ اختبارك حسب احتياجاتك </Text>
+            <Text style={styles.cardTitle}>أنشئ اختبارك الخاصّ  </Text>
             <Text style={styles.cardDescription}>
               خصّص اختبارك وابدأ التحدّي بطريقتك
             </Text>
